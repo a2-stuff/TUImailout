@@ -16,18 +16,30 @@ export const sendSmtpEmail = async (
         throw new Error(`SMTP Provider "${providerName}" not found`);
     }
 
+    // Intelligent SSL handling:
+    // If port is 587 (STARTTLS) or 25, we MUST connect in plain text first, then upgrade.
+    // Nodemailer's 'secure: true' means "Connect using SSL immediately", which fails on 587.
+    const isStartTlsPort = provider.port === 587 || provider.port === 25;
+    const secure = isStartTlsPort ? false : provider.secure;
+
     const transporter = nodemailer.createTransport({
         host: provider.host,
         port: provider.port,
-        secure: provider.secure,
+        secure: secure,
+        requireTLS: isStartTlsPort, // Force TLS upgrade on 587/25
         auth: {
             user: provider.username,
             pass: provider.password
         },
         connectionTimeout: 10000, // 10 seconds
         greetingTimeout: 5000,
-        socketTimeout: 15000
-    });
+        socketTimeout: 15000,
+        tls: {
+            // Do not fail on invalid certs for self-signed or internal servers if needed, 
+            // but for now keeping it strict.
+            evaluateResult: () => undefined
+        }
+    } as any);
 
     // Verify connection configuration
     try {
@@ -49,18 +61,23 @@ export const sendSmtpEmail = async (
 export const testSmtpConnection = async (provider: SmtpProvider) => {
     const nodemailer = (await import('nodemailer')).default;
 
+    const isStartTlsPort = provider.port === 587 || provider.port === 25;
+    const secure = isStartTlsPort ? false : provider.secure;
+
     const transporter = nodemailer.createTransport({
         host: provider.host,
         port: provider.port,
-        secure: provider.secure,
+        secure: secure,
+        requireTLS: isStartTlsPort,
         auth: {
             user: provider.username,
             pass: provider.password
         },
         connectionTimeout: 10000,
         greetingTimeout: 5000,
-        socketTimeout: 15000
-    });
+        socketTimeout: 15000,
+        tls: { evaluateResult: () => undefined }
+    } as any);
 
     await transporter.verify();
     return true;

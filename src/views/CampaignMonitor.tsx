@@ -23,7 +23,14 @@ const CampaignMonitor: React.FC<Props> = ({ setView, theme }) => {
         const load = () => {
             const list = getCampaigns();
             list.sort((a, b) => b.startTime - a.startTime); // Newest first
-            setCampaigns(list);
+
+            setCampaigns(prev => {
+                // Prevent re-render if data is identical
+                if (JSON.stringify(prev) === JSON.stringify(list)) {
+                    return prev;
+                }
+                return list;
+            });
 
             // Only auto-select on first load, not on subsequent updates
             if (!hasInitialized && list.length > 0) {
@@ -54,7 +61,7 @@ const CampaignMonitor: React.FC<Props> = ({ setView, theme }) => {
     const handleCancelCampaign = () => {
         if (selectedCampaign && selectedCampaign.status === 'running') {
             const updated = { ...selectedCampaign, status: 'cancelled' as const };
-            saveCampaign(updated);
+            saveCampaign(updated, false);
             logWarning(LogCategory.CAMPAIGN, `Campaign cancelled: ${selectedCampaign.name}`, {
                 campaignId: selectedCampaign.id
             });

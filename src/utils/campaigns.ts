@@ -22,13 +22,17 @@ export const getCampaigns = (): Campaign[] => {
     }
 };
 
-export const saveCampaign = (campaign: Campaign) => {
+export const saveCampaign = (campaign: Campaign, allowCreate = true) => {
     const campaigns = getCampaigns();
     const existingIndex = campaigns.findIndex(c => c.id === campaign.id);
 
     if (existingIndex >= 0) {
         campaigns[existingIndex] = campaign;
     } else {
+        if (!allowCreate) {
+            // Campaign was deleted externally. Do not resurrect it.
+            return;
+        }
         campaigns.push(campaign);
     }
 

@@ -27,9 +27,15 @@ const run = async () => {
 
     logInfo(LogCategory.CAMPAIGN, `Starting campaign: ${campaign.name}`, { campaignId });
 
+    if (['completed', 'failed', 'cancelled'].includes(campaign.status)) {
+        logInfo(LogCategory.CAMPAIGN, `Campaign is already in terminal state: ${campaign.status}. Aborting worker start.`, { campaignId });
+        console.log(`Campaign is already ${campaign.status}.`);
+        process.exit(0);
+    }
+
     try {
         campaign.status = 'running';
-        saveCampaign(campaign);
+        saveCampaign(campaign, false);
 
         // Read Template
         const templateContent = fs.readFileSync(campaign.templatePath, 'utf-8');
@@ -41,10 +47,28 @@ const run = async () => {
         let records: any[] = [];
         try {
             records = parse(listContent, {
-                columns: true,
+                columns: (header: string[]) => {
+                    return header.map(column => column.trim().replace(/^['"]|['"]$/g, ''));
+                },
                 skip_empty_lines: true,
                 trim: true,
-                relax_column_count: true // Allow rows with fewer columns than header
+                relax_column_count: true
+            });
+
+            // Post-processing to clean values (csv-parse handles double quotes, but not single quotes by default)
+            records = records.map(record => {
+                const newRecord: any = {};
+                Object.keys(record).forEach(key => {
+                    let val = record[key];
+                    if (typeof val === 'string') {
+                        // Remove surrounding single quotes
+                        val = val.replace(/^'|'$/g, '');
+                        // Remove surrounding double quotes (just in case)
+                        val = val.replace(/^"|"$/g, '');
+                    }
+                    newRecord[key] = val;
+                });
+                return newRecord;
             });
         } catch (csvError: any) {
             const errorMsg = `CSV Parse Error: ${csvError.message}. Please check your CSV file format.`;
@@ -90,7 +114,7 @@ const run = async () => {
         }
 
         campaign.total = records.length;
-        saveCampaign(campaign);
+        saveCampaign(campaign, false);
         logInfo(LogCategory.CAMPAIGN, `Loaded ${records.length} recipients`);
 
         let sentCount = 0;
@@ -110,6 +134,13 @@ const run = async () => {
             const burstDelays = [t1, t2].sort((a, b) => a - b);
 
             for (const delay of burstDelays) {
+                // Reload campaign to check for status changes
+                const currentCampaign = getCampaign(campaignId);
+                if (!currentCampaign || ['cancelled', 'completed', 'failed'].includes(currentCampaign.status)) {
+                    logInfo(LogCategory.CAMPAIGN, `Campaign stopped externally (status: ${currentCampaign?.status}). Stopping worker.`, { campaignId });
+                    process.exit(0);
+                }
+
                 if (sentCount >= records.length) break;
 
                 const targetTime = windowStartTime + delay;
@@ -120,11 +151,20 @@ const run = async () => {
                     await new Promise(resolve => setTimeout(resolve, currentWait));
                 }
 
+                // Check again after wait
+                const afterWaitCampaign = getCampaign(campaignId);
+                if (!afterWaitCampaign || ['cancelled', 'completed', 'failed'].includes(afterWaitCampaign.status)) {
+                    logInfo(LogCategory.CAMPAIGN, `Campaign stopped externally during wait (status: ${afterWaitCampaign?.status}). Stopping worker.`, { campaignId });
+                    process.exit(0);
+                }
+
                 logInfo(LogCategory.CAMPAIGN, `Executing burst of ${burstSize} emails...`, { campaignId, burstSize });
 
                 for (let b = 0; b < burstSize && sentCount < records.length; b++) {
                     const record = records[sentCount];
-                    const email = record.email;
+                    // Find email key case-insensitively
+                    const emailKey = Object.keys(record).find(k => k.toLowerCase() === 'email');
+                    const email = emailKey ? record[emailKey] : null;
 
                     if (!email) {
                         logError(LogCategory.EMAIL, `Missing email in record ${sentCount + 1}`, { record });
@@ -166,7 +206,7 @@ const run = async () => {
 
                     sentCount++;
                     campaign.progress = sentCount;
-                    saveCampaign(campaign);
+                    saveCampaign(campaign, false);
 
                     // Small 200ms pause between emails in a burst to be safe
                     await new Promise(resolve => setTimeout(resolve, 200));

@@ -32,8 +32,18 @@ const LogsManager: React.FC<Props> = ({ setView, theme }) => {
     }, [autoRefresh]);
 
     const loadLogs = () => {
-        const allLogs = readLogs();
-        setLogs(allLogs.reverse()); // Most recent first
+        const allLogs = readLogs().reverse(); // Most recent first
+
+        // Simple check to prevent unnecessary re-renders and flickering
+        // We compare length and the timestamp of the most recent log
+        setLogs(prev => {
+            if (prev.length === allLogs.length &&
+                prev.length > 0 && allLogs.length > 0 &&
+                prev[0].timestamp === allLogs[0].timestamp) {
+                return prev;
+            }
+            return allLogs;
+        });
     };
 
     useInput((input, key) => {
@@ -124,7 +134,7 @@ const LogsManager: React.FC<Props> = ({ setView, theme }) => {
     const stats = getCategoryStats();
     const filteredLogs = filterLogs();
 
-    const truncateText = (text: string, maxLength: number = 80): string => {
+    const truncateText = (text: string, maxLength: number = 60): string => {
         if (text.length <= maxLength) return text;
         return text.substring(0, maxLength) + '...';
     };
@@ -135,7 +145,7 @@ const LogsManager: React.FC<Props> = ({ setView, theme }) => {
         const lines: string[] = [];
         Object.entries(details).forEach(([key, value]) => {
             const valueStr = typeof value === 'object' ? JSON.stringify(value) : String(value);
-            lines.push(`  ${key}: ${truncateText(valueStr, 70)}`);
+            lines.push(`  ${key}: ${truncateText(valueStr, 40)}`);
         });
         return lines;
     };
@@ -171,7 +181,7 @@ const LogsManager: React.FC<Props> = ({ setView, theme }) => {
                                     <Text color={theme.accent}> {log.category}</Text>
                                 </Box>
                                 <Box marginLeft={2}>
-                                    <Text>{truncateText(log.message, 90)}</Text>
+                                    <Text>{truncateText(log.message, 65)}</Text>
                                 </Box>
                                 {detailLines.length > 0 && (
                                     <Box flexDirection="column" marginLeft={2}>

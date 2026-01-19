@@ -1,4 +1,8 @@
-# TUImailout
+
+██████ ██  ██ ██ ▄▄   ▄▄  ▄▄▄  ▄▄ ▄▄     ▄▄▄  ▄▄ ▄▄ ▄▄▄▄▄▄ 
+  ██   ██  ██ ██ ██▀▄▀██ ██▀██ ██ ██    ██▀██ ██ ██   ██   
+  ██   ▀████▀ ██ ██   ██ ██▀██ ██ ██▄▄▄ ▀███▀ ▀███▀   ██   
+                                                           
 
 A powerful, interactive Terminal User Interface (TUI) application for sending mass emails using Amazon SES, Mailgun, and Mailchimp Transactional. Built with Node.js, React (Ink), and TypeScript.
 

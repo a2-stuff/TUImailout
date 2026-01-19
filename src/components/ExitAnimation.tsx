@@ -37,7 +37,11 @@ const ExitAnimation: React.FC<Props> = ({ theme, onComplete }) => {
 
     return (
         <Box flexDirection="column" padding={2} justifyContent="center" alignItems="center" height="100%">
-            <BigText text="TUImailout" font="tiny" colors={[theme.primary, theme.accent]} />
+            <Text color={theme.primary}>
+                {`██████ ██  ██ ██ ▄▄   ▄▄  ▄▄▄  ▄▄ ▄▄     ▄▄▄  ▄▄ ▄▄ ▄▄▄▄▄▄ 
+  ██   ██  ██ ██ ██▀▄▀██ ██▀██ ██ ██    ██▀██ ██ ██   ██   
+  ██   ▀████▀ ██ ██   ██ ██▀██ ██ ██▄▄▄ ▀███▀ ▀███▀   ██   `}
+            </Text>
             <Box flexDirection="column" marginTop={1} borderStyle="single" borderColor={theme.primary} paddingX={2} width={50}>
                 {logs.map((log, i) => (
                     <Text key={i} color={i === messages.length - 1 ? theme.accent : theme.primary}>
