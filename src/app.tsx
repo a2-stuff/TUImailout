@@ -15,6 +15,7 @@ import ExitAnimation from './components/ExitAnimation.js';
 import { getTheme, type Theme } from './utils/themes.js';
 import { getConfig } from './utils/config.js';
 import { logInfo, LogCategory } from './utils/logger.js';
+import DashboardLayout from './components/DashboardLayout.js';
 
 const App = () => {
     const [isBooting, setIsBooting] = useState(true);
@@ -39,6 +40,10 @@ const App = () => {
         return <BootAnimation theme={theme} onComplete={() => setIsBooting(false)} />;
     }
 
+    if (currentView === ViewName.EXIT) {
+        return <ExitAnimation theme={theme} onComplete={() => process.exit(0)} />;
+    }
+
     const renderView = () => {
         switch (currentView) {
             case ViewName.HOME:
@@ -59,17 +64,15 @@ const App = () => {
                 return <LogsManager setView={setCurrentView} theme={theme} />;
             case ViewName.TEMPLATES:
                 return <TemplatesMenu setView={setCurrentView} theme={theme} />;
-            case ViewName.EXIT:
-                return <ExitAnimation theme={theme} onComplete={() => process.exit(0)} />;
             default:
                 return <Home setView={setCurrentView} theme={theme} />;
         }
     };
 
     return (
-        <Box flexDirection="column" height="100%">
+        <DashboardLayout theme={theme} viewName={currentView}>
             {renderView()}
-        </Box>
+        </DashboardLayout>
     );
 };
 

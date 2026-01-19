@@ -12,15 +12,15 @@ export type Theme = {
 
 export const themes: Record<string, Theme> = {
     default: {
-        name: 'Cyber Cyan',
-        primary: '#00D4FF',
-        secondary: '#5C2D91',
-        accent: '#FF007F',
-        text: '#FFFFFF',
-        background: '#1A1A1A',
-        success: '#00FF00',
-        warning: '#FFFF00',
-        error: '#FF0000',
+        name: 'Dashboard Protocol',
+        primary: '#7aa2f7', // Pastel Blue
+        secondary: '#565f89', // Slate Blue/Gray
+        accent: '#bb9af7', // Soft Purple
+        text: '#c0caf5', // Pale Blue/White
+        background: '#1a1b26', // Deep Dark Blue
+        success: '#9ece6a', // Soft Green
+        warning: '#e0af68', // Soft Orange
+        error: '#f7768e', // Soft Red
     },
     neon: {
         name: 'Neon Nights',
