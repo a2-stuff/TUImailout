@@ -16,7 +16,7 @@ export interface Campaign {
     templatePath: string;
     listPath: string;
     provider: 'ses' | 'mailgun' | 'mailchimp';
-    status: 'pending' | 'running' | 'completed' | 'failed' | 'stopped';
+    status: 'pending' | 'running' | 'completed' | 'failed' | 'stopped' | 'cancelled';
     progress: number;
     total: number;
     rateLimit: number; // emails per minute

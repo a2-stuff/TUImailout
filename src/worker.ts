@@ -32,7 +32,7 @@ const run = async () => {
         const templateContent = fs.readFileSync(campaign.templatePath, 'utf-8');
         logInfo(LogCategory.CAMPAIGN, `Template loaded: ${campaign.templatePath}`);
 
-        // Read List with better error handling
+        // Read List with flexible column handling
         const listContent = fs.readFileSync(campaign.listPath, 'utf-8');
 
         let records: any[] = [];
@@ -41,10 +41,10 @@ const run = async () => {
                 columns: true,
                 skip_empty_lines: true,
                 trim: true,
-                relax_column_count: false // Strict column count
+                relax_column_count: true // Allow rows with fewer columns than header
             });
         } catch (csvError: any) {
-            const errorMsg = `CSV Parse Error: ${csvError.message}. Please check your CSV file format. Expected columns: email,name`;
+            const errorMsg = `CSV Parse Error: ${csvError.message}. Please check your CSV file format.`;
             logError(LogCategory.CAMPAIGN, errorMsg, {
                 file: campaign.listPath,
                 error: csvError.message

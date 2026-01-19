@@ -25,7 +25,7 @@ export const getCampaigns = (): Campaign[] => {
 export const saveCampaign = (campaign: Campaign) => {
     const campaigns = getCampaigns();
     const existingIndex = campaigns.findIndex(c => c.id === campaign.id);
-    
+
     if (existingIndex >= 0) {
         campaigns[existingIndex] = campaign;
     } else {
@@ -37,4 +37,10 @@ export const saveCampaign = (campaign: Campaign) => {
 
 export const getCampaign = (id: string): Campaign | undefined => {
     return getCampaigns().find(c => c.id === id);
+};
+
+export const deleteCampaign = (id: string): void => {
+    const campaigns = getCampaigns();
+    const filtered = campaigns.filter(c => c.id !== id);
+    fs.writeFileSync(CAMPAIGNS_FILE, JSON.stringify(filtered, null, 2));
 };

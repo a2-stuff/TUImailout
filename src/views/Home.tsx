@@ -30,10 +30,25 @@ const Home: React.FC<Props> = ({ setView, theme }) => {
         setView(item.value);
     };
 
-    useInput((input) => {
-        const num = parseInt(input);
-        if (num >= 1 && num <= items.length) {
-            handleSelect(items[num - 1]);
+    useInput((input, key) => {
+        if (key.escape || input === 'q' || input === 'Q') {
+            handleSelect({ value: ViewName.EXIT });
+        }
+
+        // Number key shortcuts
+        const numMap: { [key: string]: string } = {
+            '1': ViewName.CAMPAIGN_SETUP,
+            '2': ViewName.CAMPAIGN_MONITOR,
+            '3': ViewName.MANUAL_MENU,
+            '4': ViewName.LISTS,
+            '5': ViewName.LOGS,
+            '6': ViewName.SETTINGS,
+            '7': ViewName.INFO,
+            '8': 'EXIT'
+        };
+
+        if (numMap[input]) {
+            handleSelect({ value: numMap[input] });
         }
     });
 

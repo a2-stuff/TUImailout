@@ -35,7 +35,7 @@ const LogsManager: React.FC<Props> = ({ setView, theme }) => {
     };
 
     useInput((input, key) => {
-        if (key.escape) {
+        if (key.escape || input === 'q' || input === 'Q') {
             if (focusedPane === 'content') {
                 setFocusedPane('menu');
             } else {

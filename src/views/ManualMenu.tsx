@@ -18,6 +18,16 @@ const ManualMenu: React.FC<Props> = ({ setView, theme }) => {
     const [focusedPane, setFocusedPane] = useState<'menu' | 'content'>('menu');
 
     useInput((input, key) => {
+        // Q or ESC to go back home
+        if (key.escape || input === 'q' || input === 'Q') {
+            if (focusedPane === 'content') {
+                setFocusedPane('menu');
+            } else {
+                setView(ViewName.HOME);
+            }
+            return;
+        }
+
         if (focusedPane === 'menu') {
             if (key.rightArrow || key.return) {
                 if (activeProvider === 'HOME') {

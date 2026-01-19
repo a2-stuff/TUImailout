@@ -38,7 +38,7 @@ const CampaignSetup: React.FC<Props> = ({ setView, theme }) => {
     const [fromEmail, setFromEmail] = useState('');
 
     useInput((input, key) => {
-        if (key.escape) {
+        if (key.escape || input === 'q' || input === 'Q') {
             setView(ViewName.HOME);
         }
     });

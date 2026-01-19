@@ -91,7 +91,7 @@ const ListsMenu: React.FC<Props> = ({ setView, theme }) => {
                 // Let SelectInput handle other keys
             } else {
                 // Line navigation mode
-                if (key.escape) {
+                if (key.escape || input === 'q' || input === 'Q') {
                     setEditMode(false);
                     setFocusedPane('content');
                 } else if (key.upArrow && currentLineIndex > 0) {
@@ -107,7 +107,7 @@ const ListsMenu: React.FC<Props> = ({ setView, theme }) => {
                 }
             }
         } else if (!editMode) {
-            if (key.escape) {
+            if (key.escape || input === 'q' || input === 'Q') {
                 if (focusedPane === 'content') {
                     setFocusedPane('menu');
                 } else {

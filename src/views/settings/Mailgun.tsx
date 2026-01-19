@@ -15,7 +15,7 @@ const Mailgun: React.FC<Props> = ({ theme, isFocused, onDone }) => {
 
     useInput((input, key) => {
         if (!isFocused) return;
-        if (key.escape) {
+        if (key.escape || input === 'q' || input === 'Q') {
             onDone();
         }
     }, { isActive: isFocused });

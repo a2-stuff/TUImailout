@@ -23,6 +23,16 @@ const SettingsMenu: React.FC<Props> = ({ setView, theme, onThemeChange }) => {
     // Handle global escape if menu is focused to go back home? 
     // Or add "Back to Home" as a menu item (which it is).
     useInput((input, key) => {
+        // Q or ESC to go back home
+        if (key.escape || input === 'q' || input === 'Q') {
+            if (focusedPane === 'content') {
+                setFocusedPane('menu');
+            } else {
+                setView(ViewName.HOME);
+            }
+            return;
+        }
+
         if (focusedPane === 'menu') {
             if (key.rightArrow || key.return) {
                 // For "Back to Home", we want to execute immediately, not focus content
@@ -151,7 +161,7 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({ theme, isFocused, onTheme
 
     useInput((input, key) => {
         if (!isFocused) return;
-        if (key.escape) {
+        if (key.escape || input === 'q' || input === 'Q') {
             onDone();
         }
     }, { isActive: isFocused });

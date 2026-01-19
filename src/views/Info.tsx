@@ -15,7 +15,7 @@ const Info: React.FC<Props> = ({ setView, theme }) => {
     const [activeSection, setActiveSection] = useState('ABOUT');
 
     useInput((input, key) => {
-        if (key.escape) {
+        if (key.escape || input === 'q' || input === 'Q') {
             setView(ViewName.HOME);
         }
     });
