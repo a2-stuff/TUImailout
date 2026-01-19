@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Text } from 'ink';
+import { Box, Text, useInput } from 'ink';
 import SelectInput from 'ink-select-input';
 import { ViewName } from '../types.js';
 import type { Theme } from '../utils/themes.js';
@@ -12,12 +12,12 @@ interface Props {
 
 const Home: React.FC<Props> = ({ setView, theme }) => {
     const items = [
-        { label: 'Start Mass Campaign', value: ViewName.CAMPAIGN_SETUP },
-        { label: 'Monitor Campaigns', value: ViewName.CAMPAIGN_MONITOR },
-        { label: 'Manual Sending', value: ViewName.MANUAL_MENU },
-        { label: 'Settings', value: ViewName.SETTINGS },
-        { label: 'Info / About', value: ViewName.INFO },
-        { label: 'Exit', value: 'EXIT' },
+        { label: '1. Start Mass Campaign', value: ViewName.CAMPAIGN_SETUP },
+        { label: '2. Monitor Campaigns', value: ViewName.CAMPAIGN_MONITOR },
+        { label: '3. Manual Sending', value: ViewName.MANUAL_MENU },
+        { label: '4. Settings', value: ViewName.SETTINGS },
+        { label: '5. Info / About', value: ViewName.INFO },
+        { label: '6. Exit', value: 'EXIT' },
     ];
 
     const handleSelect = (item: any) => {
@@ -27,6 +27,13 @@ const Home: React.FC<Props> = ({ setView, theme }) => {
         }
         setView(item.value);
     };
+
+    useInput((input) => {
+        const num = parseInt(input);
+        if (num >= 1 && num <= items.length) {
+            handleSelect(items[num - 1]);
+        }
+    });
 
     return (
         <Box flexDirection="column" padding={2}>
@@ -48,6 +55,9 @@ const Home: React.FC<Props> = ({ setView, theme }) => {
                             </Text>
                         )}
                     />
+                </Box>
+                <Box marginTop={1}>
+                    <Text color="gray" italic>Press number keys 1-6 or use ↑/↓ arrows to navigate</Text>
                 </Box>
             </Box>
         </Box>

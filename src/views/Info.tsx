@@ -50,7 +50,11 @@ const Info: React.FC<Props> = ({ setView, theme }) => {
                         <Text color={theme.primary} bold>Credits</Text>
                         <Box marginTop={1}>
                             <Text>Created by: @not_jarod</Text>
-                            <Text underline>https://github.com/not_jarod</Text>
+                            <Text underline>https://github.com/a2-stuff</Text>
+                        </Box>
+                        <Box marginTop={1}>
+                            <Text>Repository:</Text>
+                            <Text color={theme.accent} underline>https://github.com/a2-stuff/TUImailout</Text>
                         </Box>
                         <Box marginTop={1}>
                             <Text>Built with:</Text>
