@@ -8,3 +8,7 @@ build/
 .logs/
 /templates/ahs
 /templates/ahs/*
+/src/ahs
+/src/ahs/*
+/assets/ahs
+/assets/ahs/*

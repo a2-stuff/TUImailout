@@ -93,58 +93,93 @@ const run = async () => {
         saveCampaign(campaign);
         logInfo(LogCategory.CAMPAIGN, `Loaded ${records.length} recipients`);
 
-        const delayMs = (60 * 1000) / campaign.rateLimit;
         let sentCount = 0;
         let failedCount = 0;
 
-        for (let i = 0; i < records.length; i++) {
-            const record = records[i];
-            const email = record.email;
+        const burstSize = campaign.rateLimit;
+        const windowDurationMs = 5 * 60 * 1000;
 
-            if (!email) {
-                logError(LogCategory.EMAIL, `Missing email in record ${i + 1}`, { record });
-                failedCount++;
-                continue;
-            }
+        while (sentCount < records.length) {
+            const windowStartTime = Date.now();
+            logInfo(LogCategory.CAMPAIGN, `Starting new 5-minute window for bursty sending`, { campaignId, windowStartTime });
 
-            // Simple personalization (replace {{name}})
-            let body = templateContent;
-            Object.keys(record).forEach((key: string) => {
-                body = body.replace(new RegExp(`{{${key}}}`, 'g'), record[key]);
-            });
+            // Pick 2 random timestamps within the window (leaving 1 min margin at the end for final burst processing)
+            const marginMs = 60 * 1000;
+            const t1 = Math.floor(Math.random() * (windowDurationMs - marginMs));
+            const t2 = Math.floor(Math.random() * (windowDurationMs - marginMs));
+            const burstDelays = [t1, t2].sort((a, b) => a - b);
 
-            try {
-                if (campaign.provider === 'ses') {
-                    await sendSesEmail(campaign.from, [email], campaign.name, body);
-                } else if (campaign.provider === 'mailgun') {
-                    await sendMailgunEmail(campaign.from, [email], campaign.name, body);
-                } else if (campaign.provider === 'mailchimp') {
-                    await sendMailchimpEmail(campaign.from, [email], campaign.name, body);
-                } else if (campaign.provider === 'smtp') {
-                    await sendSmtpEmail(campaign.smtpProviderName!, campaign.from, [email], campaign.name, body);
+            for (const delay of burstDelays) {
+                if (sentCount >= records.length) break;
+
+                const targetTime = windowStartTime + delay;
+                const currentWait = targetTime - Date.now();
+
+                if (currentWait > 0) {
+                    logInfo(LogCategory.CAMPAIGN, `Waiting ${Math.round(currentWait / 1000)}s for next random burst...`, { campaignId });
+                    await new Promise(resolve => setTimeout(resolve, currentWait));
                 }
-                sentCount++;
-                logInfo(LogCategory.EMAIL, `Sent to ${email}`, {
-                    campaign: campaign.name,
-                    recipient: email
-                });
-            } catch (err: any) {
-                failedCount++;
-                const errorMsg = `Failed to send to ${email}: ${err.message}`;
-                logError(LogCategory.EMAIL, errorMsg, {
-                    campaign: campaign.name,
-                    recipient: email,
-                    error: err.message
-                });
-                console.error(errorMsg);
+
+                logInfo(LogCategory.CAMPAIGN, `Executing burst of ${burstSize} emails...`, { campaignId, burstSize });
+
+                for (let b = 0; b < burstSize && sentCount < records.length; b++) {
+                    const record = records[sentCount];
+                    const email = record.email;
+
+                    if (!email) {
+                        logError(LogCategory.EMAIL, `Missing email in record ${sentCount + 1}`, { record });
+                        failedCount++;
+                        sentCount++;
+                        continue;
+                    }
+
+                    // Simple personalization (replace {{name}})
+                    let body = templateContent;
+                    Object.keys(record).forEach((key: string) => {
+                        body = body.replace(new RegExp(`{{${key}}}`, 'g'), record[key]);
+                    });
+
+                    try {
+                        if (campaign.provider === 'ses') {
+                            await sendSesEmail(campaign.from, [email], campaign.name, body);
+                        } else if (campaign.provider === 'mailgun') {
+                            await sendMailgunEmail(campaign.from, [email], campaign.name, body);
+                        } else if (campaign.provider === 'mailchimp') {
+                            await sendMailchimpEmail(campaign.from, [email], campaign.name, body);
+                        } else if (campaign.provider === 'smtp') {
+                            await sendSmtpEmail(campaign.smtpProviderName!, campaign.from, [email], campaign.name, body);
+                        }
+                        logInfo(LogCategory.EMAIL, `Sent to ${email}`, {
+                            campaign: campaign.name,
+                            recipient: email
+                        });
+                    } catch (err: any) {
+                        failedCount++;
+                        const errorMsg = `Failed to send to ${email}: ${err.message}`;
+                        logError(LogCategory.EMAIL, errorMsg, {
+                            campaign: campaign.name,
+                            recipient: email,
+                            error: err.message
+                        });
+                        console.error(errorMsg);
+                    }
+
+                    sentCount++;
+                    campaign.progress = sentCount;
+                    saveCampaign(campaign);
+
+                    // Small 200ms pause between emails in a burst to be safe
+                    await new Promise(resolve => setTimeout(resolve, 200));
+                }
             }
 
-            campaign.progress = i + 1;
-            saveCampaign(campaign);
-
-            // Rate limit wait
-            if (i < records.length - 1) {
-                await new Promise(resolve => setTimeout(resolve, delayMs));
+            // After bursts, wait for the remainder of the 5-minute window before starting next cycle
+            if (sentCount < records.length) {
+                const timeLeftInWindow = (windowStartTime + windowDurationMs) - Date.now();
+                if (timeLeftInWindow > 0) {
+                    logInfo(LogCategory.CAMPAIGN, `Window complete. Waiting ${Math.round(timeLeftInWindow / 1000)}s for next window...`, { campaignId });
+                    await new Promise(resolve => setTimeout(resolve, timeLeftInWindow));
+                }
             }
         }
 

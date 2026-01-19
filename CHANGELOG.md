@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.3.6] - 2026-01-19
+### Added
+- **Bursty Random Sending:** Implemented a sophisticated sending strategy for automated campaigns.
+  - Sends emails in two random "bursts" every 5 minutes.
+  - Significantly reduces the likelihood of being flagged by spam filters compared to linear sending.
+  - Includes randomized micro-delays (200ms) between emails within a burst.
+- **Clean Startup:** The application now automatically clears the terminal console on startup for a distraction-free experience.
+
+### Improved
+- **Rate Limiting Engine:** Completely rewrote the core rate limiter in `worker.ts`.
+  - Now accounts for API network latency and execution time.
+  - Prevents "rate drift" where actual sending speed was slower than configured.
+  - Ensures strict adherence to the defined "Emails Per Minute" limit.
+- **AHS Template:** Major overhaul of the included `ahs` funding template.
+  - **Styles:** Replaced incompatible CSS variables with hardcoded hex values for 100% email client compatibility.
+  - **Structure:** Added new sections for direct crypto donations and pump.fun mobile app guide.
+  - **Assets:** Updated logos, background images, and charity tile images to official high-res versions.
+  - **Links:** Fixed all call-to-action buttons to use inline styles for guaranteed visibility.
+
 ## [1.3.5] - 2026-01-19
 ### Added
 - **Templates Manager:** New view to manage HTML templates
