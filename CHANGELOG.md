@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.3.2] - 2026-01-19
+### Changed
+- **Major UI Refactor:** Applied split-pane layout pattern across entire application
+  - Manual Sending: Left pane for provider selection, right pane for send form
+  - Campaign Monitor: Left pane for campaign list, right pane for campaign details with live updates
+  - Campaign Setup: Left pane for step progress tracker, right pane for current step form
+  - Info: Left pane for section navigation (About, Credits, License), right pane for content
+- **Component Architecture:** Refactored SendSES, SendMailgun, and SendMailchimp to be embeddable with focus management
+- **Version Management:** Centralized version in `src/utils/version.ts` for consistent display across app
+- **Code Cleanup:** Removed individual send view routes in favor of split-pane ManualMenu
+
 ## [1.3.1] - 2026-01-19
 ### Changed
 - **Modular Views:** Redesigned Settings menu to use a split-pane layout (sidebar + content).

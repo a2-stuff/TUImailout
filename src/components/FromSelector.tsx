@@ -8,9 +8,10 @@ import { getConfig } from '../utils/config.js';
 interface Props {
     theme: Theme;
     onSelect: (email: string) => void;
+    isFocused?: boolean;
 }
 
-const FromSelector: React.FC<Props> = ({ theme, onSelect }) => {
+const FromSelector: React.FC<Props> = ({ theme, onSelect, isFocused = true }) => {
     const [mode, setMode] = useState<'select' | 'input'>('select');
     const [manualEmail, setManualEmail] = useState('');
     const savedEmails = getConfig<string[]>('fromEmails') || [];
@@ -31,6 +32,7 @@ const FromSelector: React.FC<Props> = ({ theme, onSelect }) => {
                 <Text color={theme.accent}>Select From Address:</Text>
                 <SelectInput
                     items={items}
+                    isFocused={isFocused}
                     onSelect={(item) => {
                         if (item.value === 'MANUAL') {
                             setMode('input');
@@ -52,6 +54,7 @@ const FromSelector: React.FC<Props> = ({ theme, onSelect }) => {
                 value={manualEmail}
                 onChange={setManualEmail}
                 onSubmit={(val) => onSelect(val)}
+                focus={isFocused}
             />
         </Box>
     );

@@ -3,13 +3,10 @@ import { Box } from 'ink';
 import { ViewName } from './types.js';
 import Home from './views/Home.js';
 import ManualMenu from './views/ManualMenu.js';
-import SendSES from './views/SendSES.js';
-import SendMailgun from './views/SendMailgun.js';
 import SettingsMenu from './views/SettingsMenu.js';
 import Info from './views/Info.js';
 import CampaignSetup from './views/CampaignSetup.js';
 import CampaignMonitor from './views/CampaignMonitor.js';
-import SendMailchimp from './views/SendMailchimp.js';
 import BootAnimation from './components/BootAnimation.js';
 import ExitAnimation from './components/ExitAnimation.js';
 import { getTheme, type Theme } from './utils/themes.js';
@@ -39,12 +36,6 @@ const App = () => {
                 return <Home setView={setCurrentView} theme={theme} />;
             case ViewName.MANUAL_MENU:
                 return <ManualMenu setView={setCurrentView} theme={theme} />;
-            case ViewName.SEND_SES:
-                return <SendSES setView={setCurrentView} theme={theme} />;
-            case ViewName.SEND_MAILGUN:
-                return <SendMailgun setView={setCurrentView} theme={theme} />;
-            case ViewName.SEND_MAILCHIMP:
-                return <SendMailchimp setView={setCurrentView} theme={theme} />;
             case ViewName.CAMPAIGN_SETUP:
                 return <CampaignSetup setView={setCurrentView} theme={theme} />;
             case ViewName.CAMPAIGN_MONITOR:

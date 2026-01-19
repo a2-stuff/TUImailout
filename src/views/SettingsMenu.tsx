@@ -125,7 +125,7 @@ const SettingsMenu: React.FC<Props> = ({ setView, theme, onThemeChange }) => {
                 </Box>
 
                 {/* Right Pane: Content */}
-                <Box width="70%" padding={2} flexDirection="column">
+                <Box width="70%" padding={2} flexDirection="column" borderStyle="single" borderColor={theme.secondary}>
                     {renderContent()}
                 </Box>
             </Box>
