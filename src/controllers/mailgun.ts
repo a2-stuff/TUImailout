@@ -14,11 +14,11 @@ export const sendMailgunEmail = async (from: string, to: string[], subject: stri
     const mailgun = new Mailgun(FormData);
     const mg = mailgun.client({ username, key: apiKey });
 
-    // Mailgun batch sending usually works by passing comma separated string or array.
+    // Send as HTML email
     return await mg.messages.create(domain, {
         from,
         to: to,
         subject,
-        text: body
+        html: body // Changed from 'text' to 'html'
     });
 };

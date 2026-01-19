@@ -7,11 +7,17 @@ import SelectInput from 'ink-select-input';
 import TextInput from 'ink-text-input';
 import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import { spawn } from 'child_process';
 import { saveCampaign } from '../utils/campaigns.js';
 import { isSesConfigured, isMailgunConfigured, isMailchimpConfigured } from '../utils/config.js';
 import FromSelector from '../components/FromSelector.js';
+
+// ES module equivalent of __dirname
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 interface Props {
     setView: (view: ViewName) => void;

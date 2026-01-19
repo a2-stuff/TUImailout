@@ -3,6 +3,8 @@ import { Box } from 'ink';
 import { ViewName } from './types.js';
 import Home from './views/Home.js';
 import ManualMenu from './views/ManualMenu.js';
+import ListsMenu from './views/ListsMenu.js';
+import LogsManager from './views/LogsManager.js';
 import SettingsMenu from './views/SettingsMenu.js';
 import Info from './views/Info.js';
 import CampaignSetup from './views/CampaignSetup.js';
@@ -11,6 +13,7 @@ import BootAnimation from './components/BootAnimation.js';
 import ExitAnimation from './components/ExitAnimation.js';
 import { getTheme, type Theme } from './utils/themes.js';
 import { getConfig } from './utils/config.js';
+import { logInfo, LogCategory } from './utils/logger.js';
 
 const App = () => {
     const [isBooting, setIsBooting] = useState(true);
@@ -21,6 +24,11 @@ const App = () => {
     useEffect(() => {
         setTheme(getTheme(themeName));
     }, [themeName]);
+
+    useEffect(() => {
+        // Log app startup
+        logInfo(LogCategory.SYSTEM, 'TUImailout application started');
+    }, []);
 
     const handleThemeChange = (newTheme: string) => {
         setThemeName(newTheme);
@@ -36,6 +44,8 @@ const App = () => {
                 return <Home setView={setCurrentView} theme={theme} />;
             case ViewName.MANUAL_MENU:
                 return <ManualMenu setView={setCurrentView} theme={theme} />;
+            case ViewName.LISTS:
+                return <ListsMenu setView={setCurrentView} theme={theme} />;
             case ViewName.CAMPAIGN_SETUP:
                 return <CampaignSetup setView={setCurrentView} theme={theme} />;
             case ViewName.CAMPAIGN_MONITOR:
@@ -44,6 +54,8 @@ const App = () => {
                 return <SettingsMenu setView={setCurrentView} theme={theme} onThemeChange={handleThemeChange} />;
             case ViewName.INFO:
                 return <Info setView={setCurrentView} theme={theme} />;
+            case ViewName.LOGS:
+                return <LogsManager setView={setCurrentView} theme={theme} />;
             case ViewName.EXIT:
                 return <ExitAnimation theme={theme} onComplete={() => process.exit(0)} />;
             default:

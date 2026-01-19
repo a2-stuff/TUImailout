@@ -1,10 +1,12 @@
 export enum ViewName {
     HOME = 'HOME',
     MANUAL_MENU = 'MANUAL_MENU',
+    LISTS = 'LISTS',
     CAMPAIGN_SETUP = 'CAMPAIGN_SETUP',
     CAMPAIGN_MONITOR = 'CAMPAIGN_MONITOR',
     SETTINGS = 'SETTINGS',
     INFO = 'INFO',
+    LOGS = 'LOGS',
     EXIT = 'EXIT',
 }
 

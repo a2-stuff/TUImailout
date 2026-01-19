@@ -11,7 +11,7 @@ export const sendMailchimpEmail = async (from: string, to: string[], subject: st
     const client = mailchimpTx(apiKey);
 
     const message = {
-        text: body,
+        html: body, // Changed from 'text' to 'html'
         subject: subject,
         from_email: from,
         to: to.map(email => ({ email, type: 'to' }))

@@ -20,7 +20,7 @@ export const sendSesEmail = async (from: string, to: string[], subject: string, 
         Destination: { ToAddresses: to },
         Message: {
             Subject: { Data: subject },
-            Body: { Text: { Data: body } }
+            Body: { Html: { Data: body } } // Changed from Text to Html
         }
     });
 

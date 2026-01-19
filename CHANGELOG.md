@@ -2,7 +2,53 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.3.3] - 2026-01-19
+### Fixed
+- **HTML Email Support:** All providers (SES, Mailgun, Mailchimp) now send HTML emails instead of plain text
+  - Templates are properly rendered in recipient email clients
+  - Changed from `text` to `html` parameter in all email controllers
+- **Campaign Worker:** Fixed ES module `__dirname` issue that caused campaigns to crash
+  - Added `fileURLToPath` and `dirname` imports for ES module compatibility
+  - Campaigns now start and run properly
+- **CSV Editor:** Automatically removes blank lines when saving files
+  - Prevents CSV parsing errors in campaigns
+  - Ensures clean, valid CSV files
+- **CSV Parsing:** Enhanced error handling with detailed messages
+  - Strict column count validation
+  - Clear error messages showing exact issue and expected format
+  - Empty file detection
+  - Missing email validation
+- **Logging System:** Added comprehensive logging to campaign worker
+  - All campaign events logged (start, completion, failures)
+  - Each email send tracked (success/failure)
+  - CSV parsing errors logged with context
+  - Viewable in Logs Manager with filtering
+- **From Addresses:** Added data migration for old email format
+  - Old string arrays automatically converted to name+email objects
+  - Default names derived from email addresses
+  - Fixed "undefined" display and crashes
+- **From Addresses UI:** Fixed navigation in edit mode
+  - Added three-step flow: Name → Email → Actions
+  - Save/Delete/Cancel menu properly accessible
+  - Better focus management
+
 ## [1.3.2] - 2026-01-19
+### Added
+- **Logs Manager:** Comprehensive activity logging and monitoring system
+  - View all application logs in one place
+  - Filter by category: System, Settings, Campaigns, Emails, Errors
+  - Auto-refresh mode for real-time monitoring
+  - Statistics dashboard showing log counts by category
+  - Clear logs functionality
+  - Logs stored in `.logs/app.log` with automatic trimming (last 1000 entries)
+- **Lists Manager:** New built-in CSV editor for managing recipient lists
+  - View all CSV files in the `/lists` directory
+  - Built-in line-by-line editor with navigation (no external editor needed)
+  - File preview with metadata (size, line count, last modified)
+  - Live editing with save/cancel functionality
+- **Keyboard Shortcuts:** Added number keys (1-8) to main menu for quick navigation
+- **Repository Links:** Updated GitHub links in Info page to point to `a2-stuff/TUImailout`
+
 ### Changed
 - **Major UI Refactor:** Applied split-pane layout pattern across entire application
   - Manual Sending: Left pane for provider selection, right pane for send form
@@ -11,6 +57,8 @@ All notable changes to this project will be documented in this file.
   - Info: Left pane for section navigation (About, Credits, License), right pane for content
 - **Component Architecture:** Refactored SendSES, SendMailgun, and SendMailchimp to be embeddable with focus management
 - **Version Management:** Centralized version in `src/utils/version.ts` for consistent display across app
+  - Boot animation now displays current version dynamically
+  - Header and Info page use centralized version constant
 - **Code Cleanup:** Removed individual send view routes in favor of split-pane ManualMenu
 
 ## [1.3.1] - 2026-01-19

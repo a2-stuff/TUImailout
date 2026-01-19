@@ -15,9 +15,11 @@ const Home: React.FC<Props> = ({ setView, theme }) => {
         { label: '1. Start Mass Campaign', value: ViewName.CAMPAIGN_SETUP },
         { label: '2. Monitor Campaigns', value: ViewName.CAMPAIGN_MONITOR },
         { label: '3. Manual Sending', value: ViewName.MANUAL_MENU },
-        { label: '4. Settings', value: ViewName.SETTINGS },
-        { label: '5. Info / About', value: ViewName.INFO },
-        { label: '6. Exit', value: 'EXIT' },
+        { label: '4. Lists Manager', value: ViewName.LISTS },
+        { label: '5. Logs Manager', value: ViewName.LOGS },
+        { label: '6. Settings', value: ViewName.SETTINGS },
+        { label: '7. Info / About', value: ViewName.INFO },
+        { label: '8. Exit', value: 'EXIT' },
     ];
 
     const handleSelect = (item: any) => {
@@ -57,7 +59,7 @@ const Home: React.FC<Props> = ({ setView, theme }) => {
                     />
                 </Box>
                 <Box marginTop={1}>
-                    <Text color="gray" italic>Press number keys 1-6 or use ↑/↓ arrows to navigate</Text>
+                    <Text color="gray" italic>Press number keys 1-8 or use ↑/↓ arrows to navigate</Text>
                 </Box>
             </Box>
         </Box>
