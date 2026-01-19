@@ -1,24 +1,24 @@
 import React, { useState } from 'react';
 import { Box, Text, useInput } from 'ink';
-import { ViewName } from '../../types.js';
 import { type Theme } from '../../utils/themes.js';
-import Header from '../../components/Header.js';
 import TextInput from 'ink-text-input';
 import { saveConfig, getConfig } from '../../utils/config.js';
 
 interface Props {
-    setView: (view: ViewName) => void;
     theme: Theme;
+    isFocused: boolean;
+    onDone: () => void;
 }
 
-const Mailchimp: React.FC<Props> = ({ setView, theme }) => {
+const Mailchimp: React.FC<Props> = ({ theme, isFocused, onDone }) => {
     const [activeField, setActiveField] = useState<string>('key');
 
     useInput((input, key) => {
+        if (!isFocused) return;
         if (key.escape) {
-            setView(ViewName.SETTINGS);
+            onDone();
         }
-    });
+    }, { isActive: isFocused });
 
     // Form States
     const [mcKey, setMcKey] = useState(getConfig<string>('mailchimpApiKey') || '');
@@ -29,9 +29,10 @@ const Mailchimp: React.FC<Props> = ({ setView, theme }) => {
             <TextInput
                 value={value}
                 onChange={setValue}
+                focus={isFocused}
                 onSubmit={(val) => {
                     saveConfig(configKey as any, val);
-                    setView(ViewName.SETTINGS);
+                    onDone();
                 }}
             />
             <Text color="gray">(Press Enter to save)</Text>
@@ -39,8 +40,10 @@ const Mailchimp: React.FC<Props> = ({ setView, theme }) => {
     );
 
     return (
-        <Box flexDirection="column" padding={2}>
-            <Header theme={theme} title="Mailchimp Transactional" />
+        <Box flexDirection="column">
+            <Box marginBottom={1}>
+                <Text color={theme.primary} bold>Mailchimp/Mandrill Configuration</Text>
+            </Box>
 
             <Box marginBottom={1}>
                 <Text color={theme.text}>Configure your Mailchimp Transactional (Mandrill) API key.</Text>
@@ -50,7 +53,7 @@ const Mailchimp: React.FC<Props> = ({ setView, theme }) => {
 
             <Box marginTop={1}>
                 <Text color={theme.warning}>
-                    [ESC] Back to Settings (Changes to current field won't be saved)
+                    [ESC] Back to Menu (Changes to current field won't be saved)
                 </Text>
             </Box>
         </Box>

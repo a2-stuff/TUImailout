@@ -1,25 +1,25 @@
 import React, { useState } from 'react';
 import { Box, Text, useInput } from 'ink';
-import { ViewName } from '../../types.js';
 import { type Theme } from '../../utils/themes.js';
-import Header from '../../components/Header.js';
 import TextInput from 'ink-text-input';
 import { saveConfig, getConfig } from '../../utils/config.js';
 
 interface Props {
-    setView: (view: ViewName) => void;
     theme: Theme;
+    isFocused: boolean;
+    onDone: () => void;
 }
 
-const Mailgun: React.FC<Props> = ({ setView, theme }) => {
+const Mailgun: React.FC<Props> = ({ theme, isFocused, onDone }) => {
     const [activeField, setActiveField] = useState<string>('key');
 
     useInput((input, key) => {
+        if (!isFocused) return;
         if (key.escape) {
-            setView(ViewName.SETTINGS);
+            onDone();
         }
-    });
-    
+    }, { isActive: isFocused });
+
     // Form States
     const [mgKey, setMgKey] = useState(getConfig<string>('mailgunApiKey') || '');
     const [mgDomain, setMgDomain] = useState(getConfig<string>('mailgunDomain') || '');
@@ -36,10 +36,11 @@ const Mailgun: React.FC<Props> = ({ setView, theme }) => {
             <TextInput
                 value={value}
                 onChange={setValue}
+                focus={isFocused}
                 onSubmit={(val) => {
                     if (nextField === 'exit') {
                         saveConfig(configKey as any, val);
-                        setView(ViewName.SETTINGS);
+                        onDone();
                     } else {
                         saveAndNext(configKey, val, nextField);
                     }
@@ -50,9 +51,11 @@ const Mailgun: React.FC<Props> = ({ setView, theme }) => {
     );
 
     return (
-        <Box flexDirection="column" padding={2}>
-            <Header theme={theme} title="Mailgun" />
-            
+        <Box flexDirection="column">
+            <Box marginBottom={1}>
+                <Text color={theme.primary} bold>Mailgun Configuration</Text>
+            </Box>
+
             <Box marginBottom={1}>
                 <Text color={theme.text}>Configure your Mailgun API keys below.</Text>
             </Box>
@@ -61,11 +64,11 @@ const Mailgun: React.FC<Props> = ({ setView, theme }) => {
             {activeField === 'domain' && renderInput('Mailgun Domain', mgDomain, setMgDomain, 'mailgunDomain', 'user')}
             {activeField === 'user' && renderInput('Mailgun Username (default: api)', mgUser, setMgUser, 'mailgunUsername', 'exit')}
 
-             <Box marginTop={1}>
-                 <Text color={theme.warning}>
-                     [ESC] Back to Settings (Changes to current field won't be saved)
-                 </Text>
-             </Box>
+            <Box marginTop={1}>
+                <Text color={theme.warning}>
+                    [ESC] Back to Menu (Changes to current field won't be saved)
+                </Text>
+            </Box>
         </Box>
     );
 };

@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.3.1] - 2026-01-19
+### Changed
+- **Modular Views:** Redesigned Settings menu to use a split-pane layout (sidebar + content).
+- **Versioning:** Adopted patch-first versioning convention.
+
 ## [1.3.0] - 2026-01-19
 ### Added
 - **From Address Management:** New settings view to save and manage frequently used "From" email addresses.

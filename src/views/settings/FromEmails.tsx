@@ -1,31 +1,31 @@
 import React, { useState } from 'react';
 import { Box, Text, useInput } from 'ink';
-import { ViewName } from '../../types.js';
 import { type Theme } from '../../utils/themes.js';
-import Header from '../../components/Header.js';
 import SelectInput from 'ink-select-input';
 import TextInput from 'ink-text-input';
 import { saveConfig, getConfig } from '../../utils/config.js';
 
 interface Props {
-    setView: (view: ViewName) => void;
     theme: Theme;
+    isFocused: boolean;
+    onDone: () => void;
 }
 
-const FromEmails: React.FC<Props> = ({ setView, theme }) => {
+const FromEmails: React.FC<Props> = ({ theme, isFocused, onDone }) => {
     const [mode, setMode] = useState<'list' | 'add'>('list');
     const [emails, setEmails] = useState<string[]>(getConfig<string[]>('fromEmails') || []);
     const [newEmail, setNewEmail] = useState('');
 
     useInput((input, key) => {
+        if (!isFocused) return;
         if (key.escape) {
             if (mode === 'add') {
                 setMode('list');
             } else {
-                setView(ViewName.SETTINGS);
+                onDone();
             }
         }
-    });
+    }, { isActive: isFocused });
 
     const handleAdd = () => {
         if (newEmail && newEmail.includes('@')) {
@@ -46,13 +46,15 @@ const FromEmails: React.FC<Props> = ({ setView, theme }) => {
     const listItems = [
         { label: '+ Add New Email', value: 'ADD_NEW' },
         ...emails.map(email => ({ label: `Delete: ${email}`, value: email })),
-        { label: 'Back to Settings', value: 'BACK' }
+        { label: 'Back to Menu', value: 'BACK' }
     ];
 
     return (
-        <Box flexDirection="column" padding={2}>
-            <Header theme={theme} title="From Addresses" />
-            
+        <Box flexDirection="column">
+            <Box marginBottom={1}>
+                <Text color={theme.primary} bold>From Address Management</Text>
+            </Box>
+
             {mode === 'list' && (
                 <Box flexDirection="column">
                     <Box marginBottom={1}>
@@ -60,11 +62,12 @@ const FromEmails: React.FC<Props> = ({ setView, theme }) => {
                     </Box>
                     <SelectInput
                         items={listItems}
+                        isFocused={isFocused && mode === 'list'}
                         onSelect={(item) => {
                             if (item.value === 'ADD_NEW') {
                                 setMode('add');
                             } else if (item.value === 'BACK') {
-                                setView(ViewName.SETTINGS);
+                                onDone();
                             } else {
                                 // Delete
                                 handleDelete(item.value as string);
@@ -83,6 +86,7 @@ const FromEmails: React.FC<Props> = ({ setView, theme }) => {
                         value={newEmail}
                         onChange={setNewEmail}
                         onSubmit={handleAdd}
+                        focus={isFocused && mode === 'add'}
                     />
                     <Text color="gray">(Press Enter to save, ESC to cancel)</Text>
                 </Box>
