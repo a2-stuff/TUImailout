@@ -1,10 +1,13 @@
 import fs from 'fs';
-import { sendSesEmail } from './controllers/ses.js';
-import { sendMailgunEmail } from './controllers/mailgun.js';
-import { sendMailchimpEmail } from './controllers/mailchimp.js';
+import { sendSesEmail, testSesConnection } from './controllers/ses.js';
+import { sendMailgunEmail, testMailgunConnection } from './controllers/mailgun.js';
+import { sendMailchimpEmail, testMailchimpConnection } from './controllers/mailchimp.js';
+import { sendSmtpEmail, testSmtpConnection } from './controllers/smtp.js';
 import { getCampaign, saveCampaign } from './utils/campaigns.js';
+import { getConfig } from './utils/config.js';
 import { parse } from 'csv-parse/sync';
 import { logInfo, logSuccess, logError, LogCategory } from './utils/logger.js';
+import type { SmtpProvider } from './views/settings/SmtpProviders.js';
 
 const campaignId = process.argv[2];
 
@@ -58,6 +61,34 @@ const run = async () => {
             throw new Error(errorMsg);
         }
 
+        // Validate Provider Connection
+        logInfo(LogCategory.CAMPAIGN, `Validating provider connection: ${campaign.provider}`, { campaignId });
+        try {
+            if (campaign.provider === 'ses') {
+                await testSesConnection();
+            } else if (campaign.provider === 'mailgun') {
+                await testMailgunConnection();
+            } else if (campaign.provider === 'mailchimp') {
+                await testMailchimpConnection();
+            } else if (campaign.provider === 'smtp') {
+                const providers = getConfig<SmtpProvider[]>('smtpProviders') || [];
+                const provider = providers.find(p => p.name === campaign.smtpProviderName);
+                if (!provider) {
+                    throw new Error(`SMTP Provider "${campaign.smtpProviderName}" not found in configuration`);
+                }
+                await testSmtpConnection(provider);
+            }
+            logInfo(LogCategory.CAMPAIGN, `Provider connection validated`, { campaignId });
+        } catch (connError: any) {
+            const errorMsg = `Connection Validation Failed: ${connError.message}`;
+            logError(LogCategory.CAMPAIGN, errorMsg, {
+                campaignId,
+                provider: campaign.provider,
+                error: connError.message
+            });
+            throw new Error(errorMsg);
+        }
+
         campaign.total = records.length;
         saveCampaign(campaign);
         logInfo(LogCategory.CAMPAIGN, `Loaded ${records.length} recipients`);
@@ -87,8 +118,10 @@ const run = async () => {
                     await sendSesEmail(campaign.from, [email], campaign.name, body);
                 } else if (campaign.provider === 'mailgun') {
                     await sendMailgunEmail(campaign.from, [email], campaign.name, body);
-                } else {
+                } else if (campaign.provider === 'mailchimp') {
                     await sendMailchimpEmail(campaign.from, [email], campaign.name, body);
+                } else if (campaign.provider === 'smtp') {
+                    await sendSmtpEmail(campaign.smtpProviderName!, campaign.from, [email], campaign.name, body);
                 }
                 sentCount++;
                 logInfo(LogCategory.EMAIL, `Sent to ${email}`, {

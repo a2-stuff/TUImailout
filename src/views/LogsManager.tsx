@@ -17,6 +17,8 @@ const LogsManager: React.FC<Props> = ({ setView, theme }) => {
     const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
     const [focusedPane, setFocusedPane] = useState<'menu' | 'content'>('menu');
     const [autoRefresh, setAutoRefresh] = useState(true);
+    const [scrollOffset, setScrollOffset] = useState(0);
+    const PAGE_SIZE = 15;
 
     useEffect(() => {
         loadLogs();
@@ -38,6 +40,7 @@ const LogsManager: React.FC<Props> = ({ setView, theme }) => {
         if (key.escape || input === 'q' || input === 'Q') {
             if (focusedPane === 'content') {
                 setFocusedPane('menu');
+                setScrollOffset(0);
             } else {
                 setView(ViewName.HOME);
             }
@@ -50,6 +53,16 @@ const LogsManager: React.FC<Props> = ({ setView, theme }) => {
         } else {
             if (key.leftArrow) {
                 setFocusedPane('menu');
+                setScrollOffset(0);
+            }
+            if (key.upArrow) {
+                setScrollOffset(prev => Math.max(0, prev - 1));
+            }
+            if (key.downArrow) {
+                setScrollOffset(prev => {
+                    const maxScroll = Math.max(0, filterLogs().length - PAGE_SIZE);
+                    return Math.min(maxScroll, prev + 1);
+                });
             }
         }
     });
@@ -105,11 +118,27 @@ const LogsManager: React.FC<Props> = ({ setView, theme }) => {
         { label: '---', value: 'DIVIDER' },
         { label: `Auto-refresh: ${autoRefresh ? 'ON' : 'OFF'}`, value: 'TOGGLE_REFRESH' },
         { label: 'Clear All Logs', value: 'CLEAR' },
-        { label: 'Back to Home', value: 'HOME' }
+        { label: '(Q) Back to Home', value: 'HOME' }
     ];
 
     const stats = getCategoryStats();
     const filteredLogs = filterLogs();
+
+    const truncateText = (text: string, maxLength: number = 80): string => {
+        if (text.length <= maxLength) return text;
+        return text.substring(0, maxLength) + '...';
+    };
+
+    const formatDetails = (details: any): string[] => {
+        if (!details) return [];
+
+        const lines: string[] = [];
+        Object.entries(details).forEach(([key, value]) => {
+            const valueStr = typeof value === 'object' ? JSON.stringify(value) : String(value);
+            lines.push(`  ${key}: ${truncateText(valueStr, 70)}`);
+        });
+        return lines;
+    };
 
     const renderContent = () => {
         if (filteredLogs.length === 0) {
@@ -130,27 +159,45 @@ const LogsManager: React.FC<Props> = ({ setView, theme }) => {
                     <Text color="gray"> ({filteredLogs.length} entries)</Text>
                 </Box>
 
-                <Box flexDirection="column" borderStyle="single" borderColor={theme.secondary} padding={1} height={20}>
-                    {filteredLogs.slice(0, 50).map((log, index) => (
-                        <Box key={index} flexDirection="column" marginBottom={index < filteredLogs.length - 1 ? 1 : 0}>
-                            <Box>
-                                <Text color="gray">[{formatTimestamp(log.timestamp)}]</Text>
-                                <Text color={getLevelColor(log.level)} bold> {log.level}</Text>
-                                <Text color={theme.accent}> {log.category}</Text>
+                <Box flexDirection="column" borderStyle="single" borderColor={focusedPane === 'content' ? theme.accent : theme.secondary} padding={1} minHeight={20}>
+                    {filteredLogs.slice(scrollOffset, scrollOffset + PAGE_SIZE).map((log, index) => {
+                        const detailLines = formatDetails(log.details);
+
+                        return (
+                            <Box key={index} flexDirection="column" marginBottom={index < Math.min(filteredLogs.length - 1, 49) ? 1 : 0}>
+                                <Box>
+                                    <Text color="gray">[{formatTimestamp(log.timestamp).slice(0, 19)}]</Text>
+                                    <Text color={getLevelColor(log.level)} bold> {log.level}</Text>
+                                    <Text color={theme.accent}> {log.category}</Text>
+                                </Box>
+                                <Box marginLeft={2}>
+                                    <Text>{truncateText(log.message, 90)}</Text>
+                                </Box>
+                                {detailLines.length > 0 && (
+                                    <Box flexDirection="column" marginLeft={2}>
+                                        {detailLines.slice(0, 3).map((line, i) => (
+                                            <Text key={i} color="gray" dimColor>{line}</Text>
+                                        ))}
+                                        {detailLines.length > 3 && (
+                                            <Text color="gray" dimColor>  ... {detailLines.length - 3} more fields</Text>
+                                        )}
+                                    </Box>
+                                )}
                             </Box>
-                            <Text>{log.message}</Text>
-                            {log.details && (
-                                <Text color="gray" dimColor>{JSON.stringify(log.details)}</Text>
-                            )}
-                        </Box>
-                    ))}
+                        );
+                    })}
                 </Box>
 
-                {filteredLogs.length > 50 && (
-                    <Box marginTop={1}>
-                        <Text color="gray">Showing 50 of {filteredLogs.length} entries (most recent)</Text>
-                    </Box>
-                )}
+                <Box marginTop={1} justifyContent="space-between">
+                    <Text color="gray">
+                        Showing {scrollOffset + 1}-{Math.min(scrollOffset + PAGE_SIZE, filteredLogs.length)} of {filteredLogs.length} entries
+                    </Text>
+                    {filteredLogs.length > PAGE_SIZE && (
+                        <Text color={theme.accent}>
+                            ↑/↓ to Scroll {scrollOffset > 0 ? '(More above)' : ''} {scrollOffset + PAGE_SIZE < filteredLogs.length ? '(More below)' : ''}
+                        </Text>
+                    )}
+                </Box>
             </Box>
         );
     };
@@ -209,7 +256,7 @@ const LogsManager: React.FC<Props> = ({ setView, theme }) => {
 
                     <Box marginTop={2}>
                         <Text color="gray" dimColor>
-                            {focusedPane === 'menu' ? '↑/↓ Select  Enter/→ View' : 'ESC/← Back to Menu'}
+                            {focusedPane === 'menu' ? '↑/↓ Select  Enter/→ View' : 'ESC/Q/← Back to Menu'}
                         </Text>
                     </Box>
                 </Box>

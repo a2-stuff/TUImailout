@@ -4,37 +4,38 @@ A powerful, interactive Terminal User Interface (TUI) application for sending ma
 
 ## Features
 
-*   **Multi-Provider Support:** Send seamlessly via Amazon SES, Mailgun, or Mailchimp Transactional.
+*   **Multi-Provider Support:** Send seamlessly via Amazon SES, Mailgun, Mailchimp Transactional, or any **Custom SMTP Provider**.
 *   **Mass Campaigns:**
     *   Load HTML templates from local folders (includes standard HTML boilerplate).
     *   Load recipient lists from CSV files.
     *   Configurable sending rates (emails per minute).
     *   Background processing with real-time monitoring.
     *   Step-by-step wizard with progress tracking.
+*   **Templates Manager:**
+    *   Browse and manage your HTML email templates.
+    *   **Browser Preview:** Instantly open templates in your default browser to view the final design.
+    *   **Management:** Rename template folders and delete unused templates with confirmation.
 *   **Lists Manager:**
-    *   Built-in CSV editor for managing recipient lists.
+    *   **Create & Delete:** Create new lists by pasting text or delete existing lists safely.
+    *   **Auto-Header:** Automatically adds `email,name` header if missing and filters blank lines.
+    *   **CSV Editor:** Built-in editor for managing recipient lists.
     *   View, edit, and preview CSV files without leaving the app.
-    *   Line-by-line editing with keyboard navigation.
-    *   File metadata display (size, line count, last modified).
 *   **Logs Manager:**
-    *   Comprehensive activity logging system.
-    *   Filter logs by category (System, Settings, Campaigns, Emails, Errors).
-    *   Real-time auto-refresh monitoring.
-    *   Statistics dashboard with log counts.
-    *   Clear logs functionality.
-*   **Settings Management:**
-    *   Modular split-pane interface for easy navigation.
-    *   Provider settings for Amazon SES, Mailgun, and Mailchimp.
-    *   Theme configuration with 6 futuristic themes.
-    *   Manage multiple "From" addresses (name + email) for quick selection.
+    *   **Scrollable History:** Use ↑/↓ keys to scroll through extensive log history.
+    *   Comprehensive activity logging with auto-refresh and category filters.
+    *   Trimmed and formatted display for large log messages and data.
+*   **Reliability Features:**
+    *   **Pre-flight Validation:** Campaigns automatically verify your provider connection before starting.
+    *   **SMTP Testing:** Real-time connection testing with timeout handling for custom SMTP.
 *   **Theme System:**
     *   6 Futuristic Themes: Cyber Cyan, Neon Nights, Toxic Waste, Cobalt Strike, Retro Amber, Matrix Ghost.
 *   **Enhanced UX:**
     *   Cinematic boot and shutdown animations.
     *   Split-pane layouts across all major views.
-    *   Number key shortcuts (1-8) for quick menu navigation.
+    *   Shortcut Hints: `(Q)` and `ESC` shortcuts clearly labeled for quick navigation.
+    *   Number key shortcuts (1-9) for lightning-fast menu navigation.
     *   Menu-driven interface with intuitive keyboard controls.
-*   **Manual Sending:** Send individual quick emails via any configured provider.
+*   **Manual Sending:** Send individual quick emails via any configured provider, including custom SMTP.
 
 ## Installation
 

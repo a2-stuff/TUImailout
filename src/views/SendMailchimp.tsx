@@ -148,7 +148,7 @@ const SendMailchimp: React.FC<Props> = ({ theme, isFocused, onDone }) => {
                     <Text color={status.startsWith('Error') ? 'red' : 'green'}>{status}</Text>
                     <Box marginTop={1}>
                         <SelectInput
-                            items={[{ label: 'Back to Menu', value: 'home' }]}
+                            items={[{ label: '(Q) Back to Menu', value: 'home' }]}
                             isFocused={isFocused}
                             onSelect={() => onDone()}
                         />

@@ -9,6 +9,7 @@ import AmazonSES from './settings/AmazonSES.js';
 import Mailgun from './settings/Mailgun.js';
 import Mailchimp from './settings/Mailchimp.js';
 import FromEmails from './settings/FromEmails.js';
+import SmtpProviders from './settings/SmtpProviders.js';
 
 interface Props {
     setView: (view: ViewName) => void;
@@ -55,9 +56,10 @@ const SettingsMenu: React.FC<Props> = ({ setView, theme, onThemeChange }) => {
         { label: 'Provider: Amazon SES', value: 'SES' },
         { label: 'Provider: Mailgun', value: 'MAILGUN' },
         { label: 'Provider: Mailchimp', value: 'MAILCHIMP' },
+        { label: 'Custom SMTP Providers', value: 'SMTP' },
         { label: 'From Addresses', value: 'FROM_EMAILS' },
         { label: 'Change Theme', value: 'THEME' },
-        { label: 'Back to Home', value: 'HOME' },
+        { label: '(Q) Back to Home', value: 'HOME' },
     ];
 
     const renderContent = () => {
@@ -74,6 +76,8 @@ const SettingsMenu: React.FC<Props> = ({ setView, theme, onThemeChange }) => {
                 return <Mailgun {...commonProps} />;
             case 'MAILCHIMP':
                 return <Mailchimp {...commonProps} />;
+            case 'SMTP':
+                return <SmtpProviders {...commonProps} />;
             case 'FROM_EMAILS':
                 return <FromEmails {...commonProps} />;
             case 'THEME':
@@ -129,7 +133,7 @@ const SettingsMenu: React.FC<Props> = ({ setView, theme, onThemeChange }) => {
                     </Box>
                     <Box marginTop={2}>
                         <Text color="gray" dimColor>
-                            {focusedPane === 'menu' ? '↑/↓ Select  Enter/→ Edit' : 'ESC/← Back to Menu'}
+                            {focusedPane === 'menu' ? '↑/↓ Select  Enter/→ Edit' : 'ESC/Q/← Back to Menu'}
                         </Text>
                     </Box>
                 </Box>
@@ -186,7 +190,7 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({ theme, isFocused, onTheme
             />
             <Box marginTop={1}>
                 <Text color={theme.warning}>
-                    [ESC] Back to Menu
+                    [ESC/Q] Back to Menu
                 </Text>
             </Box>
         </Box>

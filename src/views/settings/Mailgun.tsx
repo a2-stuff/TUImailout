@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Box, Text, useInput } from 'ink';
 import { type Theme } from '../../utils/themes.js';
 import TextInput from 'ink-text-input';
+import SelectInput from 'ink-select-input';
 import { saveConfig, getConfig } from '../../utils/config.js';
 
 interface Props {
@@ -24,10 +25,26 @@ const Mailgun: React.FC<Props> = ({ theme, isFocused, onDone }) => {
     const [mgKey, setMgKey] = useState(getConfig<string>('mailgunApiKey') || '');
     const [mgDomain, setMgDomain] = useState(getConfig<string>('mailgunDomain') || '');
     const [mgUser, setMgUser] = useState(getConfig<string>('mailgunUsername') || 'api');
+    const [isTesting, setIsTesting] = useState(false);
+    const [testStatus, setTestStatus] = useState<{ success?: boolean, error?: string } | null>(null);
 
     const saveAndNext = (key: string, value: string, nextField: string) => {
         saveConfig(key as any, value);
         setActiveField(nextField);
+    };
+
+    const handleTest = async () => {
+        setIsTesting(true);
+        setTestStatus(null);
+        try {
+            const { testMailgunConnection } = await import('../../controllers/mailgun.js');
+            await testMailgunConnection();
+            setTestStatus({ success: true });
+        } catch (error: any) {
+            setTestStatus({ success: false, error: error.message });
+        } finally {
+            setIsTesting(false);
+        }
     };
 
     const renderInput = (label: string, value: string, setValue: (v: string) => void, configKey: string, nextField: string) => (
@@ -62,11 +79,44 @@ const Mailgun: React.FC<Props> = ({ theme, isFocused, onDone }) => {
 
             {activeField === 'key' && renderInput('Mailgun API Key', mgKey, setMgKey, 'mailgunApiKey', 'domain')}
             {activeField === 'domain' && renderInput('Mailgun Domain', mgDomain, setMgDomain, 'mailgunDomain', 'user')}
-            {activeField === 'user' && renderInput('Mailgun Username (default: api)', mgUser, setMgUser, 'mailgunUsername', 'exit')}
+            {activeField === 'user' && renderInput('Mailgun Username (default: api)', mgUser, setMgUser, 'mailgunUsername', 'testMenu')}
+
+            {activeField === 'testMenu' && (
+                <Box flexDirection="column">
+                    {testStatus && (
+                        <Box marginBottom={1}>
+                            {testStatus.success ? (
+                                <Text color="green">✔ Connection successful!</Text>
+                            ) : (
+                                <Text color="red">✘ Connection failed: {testStatus.error}</Text>
+                            )}
+                        </Box>
+                    )}
+                    {isTesting ? (
+                        <Text color={theme.accent}>Testing connection...</Text>
+                    ) : (
+                        <Box flexDirection="column">
+                            <Text color={theme.accent}>Next Steps:</Text>
+                            <SelectInput
+                                items={[
+                                    { label: 'Test Connection', value: 'test' },
+                                    { label: 'Back to Start', value: 'key' },
+                                    { label: 'Done', value: 'exit' }
+                                ]}
+                                onSelect={(item: any) => {
+                                    if (item.value === 'test') handleTest();
+                                    else if (item.value === 'exit') onDone();
+                                    else setActiveField(item.value);
+                                }}
+                            />
+                        </Box>
+                    )}
+                </Box>
+            )}
 
             <Box marginTop={1}>
                 <Text color={theme.warning}>
-                    [ESC] Back to Menu (Changes to current field won't be saved)
+                    [ESC/Q] Back to Menu
                 </Text>
             </Box>
         </Box>

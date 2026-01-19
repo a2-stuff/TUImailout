@@ -6,3 +6,5 @@ build/
 .data
 /.data/*
 .logs/
+/templates/ahs
+/templates/ahs/*

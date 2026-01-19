@@ -22,3 +22,21 @@ export const sendMailgunEmail = async (from: string, to: string[], subject: stri
         html: body // Changed from 'text' to 'html'
     });
 };
+
+export const testMailgunConnection = async () => {
+    const apiKey = getConfig<string>('mailgunApiKey');
+    const domain = getConfig<string>('mailgunDomain');
+    const username = getConfig<string>('mailgunUsername') || 'api';
+
+    if (!apiKey || !domain) {
+        throw new Error('Missing Mailgun Credentials.');
+    }
+
+    const { default: Mailgun } = await import('mailgun.js');
+    const { default: FormData } = await import('form-data');
+    const mailgun = new Mailgun(FormData as any);
+    const mg = mailgun.client({ username, key: apiKey });
+
+    await mg.domains.get(domain);
+    return true;
+};

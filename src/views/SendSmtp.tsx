@@ -6,9 +6,10 @@ import Header from '../components/Header.js';
 import SelectInput from 'ink-select-input';
 import TextInput from 'ink-text-input';
 import Spinner from 'ink-spinner';
-import { sendMailgunEmail } from '../controllers/mailgun.js';
-import { isMailgunConfigured } from '../utils/config.js';
+import { sendSmtpEmail } from '../controllers/smtp.js';
+import { isSmtpConfigured, getConfig } from '../utils/config.js';
 import FromSelector from '../components/FromSelector.js';
+import { type SmtpProvider } from './settings/SmtpProviders.js';
 
 interface Props {
     theme: Theme;
@@ -16,11 +17,12 @@ interface Props {
     onDone: () => void;
 }
 
-const SendMailgun: React.FC<Props> = ({ theme, isFocused, onDone }) => {
-    const [step, setStep] = useState<'form' | 'sending' | 'result'>('form');
+const SendSmtp: React.FC<Props> = ({ theme, isFocused, onDone }) => {
+    const [step, setStep] = useState<'provider' | 'form' | 'sending' | 'result'>('provider');
     const [field, setField] = useState<'from' | 'to' | 'subject' | 'body' | 'send'>('from');
+    const [selectedProvider, setSelectedProvider] = useState<string>('');
 
-    const configured = isMailgunConfigured();
+    const configured = isSmtpConfigured();
 
     useInput((input, key) => {
         if (!isFocused) return;
@@ -33,14 +35,14 @@ const SendMailgun: React.FC<Props> = ({ theme, isFocused, onDone }) => {
         return (
             <Box flexDirection="column">
                 <Box borderStyle="round" borderColor="red" padding={1} flexDirection="column">
-                    <Text color="red" bold>Mailgun is not configured!</Text>
+                    <Text color="red" bold>No SMTP providers configured!</Text>
                     <Box marginTop={1}>
-                        <Text>Please go to Settings and enter your Mailgun API Key and Domain.</Text>
+                        <Text>Please go to Settings and add at least one SMTP provider.</Text>
                     </Box>
                 </Box>
                 <Box marginTop={1}>
                     <SelectInput
-                        items={[{ label: 'Back', value: 'back' }]}
+                        items={[{ label: '(Q) Back', value: 'back' }]}
                         isFocused={isFocused}
                         onSelect={() => onDone()}
                     />
@@ -60,7 +62,7 @@ const SendMailgun: React.FC<Props> = ({ theme, isFocused, onDone }) => {
         const recipients = to.split(',').map(e => e.trim());
 
         try {
-            await sendMailgunEmail(from, recipients, subject, body);
+            await sendSmtpEmail(selectedProvider, from, recipients, subject, body);
             setStatus('Email sent successfully!');
         } catch (error: any) {
             setStatus(`Error: ${error.message}`);
@@ -75,16 +77,35 @@ const SendMailgun: React.FC<Props> = ({ theme, isFocused, onDone }) => {
         else if (field === 'body') setField('send');
     };
 
+    const providers = getConfig<SmtpProvider[]>('smtpProviders') || [];
+
     return (
         <Box flexDirection="column">
             <Box marginBottom={1}>
-                <Text color={theme.primary} bold>Send via Mailgun</Text>
+                <Text color={theme.primary} bold>Send via Custom SMTP</Text>
             </Box>
+
+            {step === 'provider' && (
+                <Box flexDirection="column">
+                    <Box marginBottom={1}>
+                        <Text color={theme.accent}>Select SMTP Provider:</Text>
+                    </Box>
+                    <SelectInput
+                        items={providers.map(p => ({ label: p.name, value: p.name }))}
+                        isFocused={isFocused}
+                        onSelect={(item) => {
+                            setSelectedProvider(item.value);
+                            setStep('form');
+                        }}
+                    />
+                </Box>
+            )}
 
             {step === 'form' && (
                 <Box flexDirection="column">
                     <Box marginBottom={1}>
-                        <Text color="gray" italic>Press [ESC] to return to menu</Text>
+                        <Text color="gray" italic>Press [ESC/Q] to return to menu</Text>
+                        <Text color="gray">Using Provider: <Text color={theme.accent}>{selectedProvider}</Text></Text>
                     </Box>
 
                     {field === 'from' ? (
@@ -159,4 +180,4 @@ const SendMailgun: React.FC<Props> = ({ theme, isFocused, onDone }) => {
     );
 };
 
-export default SendMailgun;
+export default SendSmtp;

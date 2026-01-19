@@ -7,6 +7,7 @@ export enum ViewName {
     SETTINGS = 'SETTINGS',
     INFO = 'INFO',
     LOGS = 'LOGS',
+    TEMPLATES = 'TEMPLATES',
     EXIT = 'EXIT',
 }
 
@@ -15,7 +16,8 @@ export interface Campaign {
     name: string;
     templatePath: string;
     listPath: string;
-    provider: 'ses' | 'mailgun' | 'mailchimp';
+    provider: 'ses' | 'mailgun' | 'mailchimp' | 'smtp';
+    smtpProviderName?: string;
     status: 'pending' | 'running' | 'completed' | 'failed' | 'stopped' | 'cancelled';
     progress: number;
     total: number;

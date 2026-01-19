@@ -10,13 +10,15 @@ interface AppSchema {
 	mailgunUsername?: string;
 	mailchimpApiKey?: string;
 	fromEmails?: string[];
+	smtpProviders?: any[];
 }
 
 const config = new Conf<AppSchema>({
 	projectName: 'tuimailout',
 	defaults: {
 		theme: 'default',
-		fromEmails: []
+		fromEmails: [],
+		smtpProviders: []
 	}
 });
 
@@ -42,6 +44,11 @@ export const isMailgunConfigured = (): boolean => {
 
 export const isMailchimpConfigured = (): boolean => {
 	return !!(config.get('mailchimpApiKey'));
+};
+
+export const isSmtpConfigured = (): boolean => {
+	const providers = config.get('smtpProviders');
+	return !!(providers && providers.length > 0);
 };
 
 export default config;

@@ -24,7 +24,7 @@ const Info: React.FC<Props> = ({ setView, theme }) => {
         { label: 'About', value: 'ABOUT' },
         { label: 'Credits', value: 'CREDITS' },
         { label: 'License', value: 'LICENSE' },
-        { label: 'Back to Home', value: 'HOME' }
+        { label: '(Q) Back to Home', value: 'HOME' }
     ];
 
     const renderContent = () => {

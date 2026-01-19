@@ -7,6 +7,7 @@ import ListsMenu from './views/ListsMenu.js';
 import LogsManager from './views/LogsManager.js';
 import SettingsMenu from './views/SettingsMenu.js';
 import Info from './views/Info.js';
+import TemplatesMenu from './views/TemplatesMenu.js';
 import CampaignSetup from './views/CampaignSetup.js';
 import CampaignMonitor from './views/CampaignMonitor.js';
 import BootAnimation from './components/BootAnimation.js';
@@ -56,6 +57,8 @@ const App = () => {
                 return <Info setView={setCurrentView} theme={theme} />;
             case ViewName.LOGS:
                 return <LogsManager setView={setCurrentView} theme={theme} />;
+            case ViewName.TEMPLATES:
+                return <TemplatesMenu setView={setCurrentView} theme={theme} />;
             case ViewName.EXIT:
                 return <ExitAnimation theme={theme} onComplete={() => process.exit(0)} />;
             default:

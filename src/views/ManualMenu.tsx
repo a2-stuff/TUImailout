@@ -7,6 +7,7 @@ import Header from '../components/Header.js';
 import SendSES from './SendSES.js';
 import SendMailgun from './SendMailgun.js';
 import SendMailchimp from './SendMailchimp.js';
+import SendSmtp from './SendSmtp.js';
 
 interface Props {
     setView: (view: ViewName) => void;
@@ -47,7 +48,8 @@ const ManualMenu: React.FC<Props> = ({ setView, theme }) => {
         { label: 'Send via Amazon SES', value: 'SES' },
         { label: 'Send via Mailgun', value: 'MAILGUN' },
         { label: 'Send via Mailchimp', value: 'MAILCHIMP' },
-        { label: 'Back to Home', value: 'HOME' },
+        { label: 'Send via Custom SMTP', value: 'SMTP' },
+        { label: '(Q) Back to Home', value: 'HOME' },
     ];
 
     const renderContent = () => {
@@ -64,6 +66,8 @@ const ManualMenu: React.FC<Props> = ({ setView, theme }) => {
                 return <SendMailgun {...commonProps} />;
             case 'MAILCHIMP':
                 return <SendMailchimp {...commonProps} />;
+            case 'SMTP':
+                return <SendSmtp {...commonProps} />;
             case 'HOME':
                 return <Text>Exiting...</Text>;
             default:
@@ -108,7 +112,7 @@ const ManualMenu: React.FC<Props> = ({ setView, theme }) => {
                     </Box>
                     <Box marginTop={2}>
                         <Text color="gray" dimColor>
-                            {focusedPane === 'menu' ? '↑/↓ Select  Enter/→ Edit' : 'ESC/← Back to Menu'}
+                            {focusedPane === 'menu' ? '↑/↓ Select  Enter/→ Edit' : 'ESC/Q/← Back to Menu'}
                         </Text>
                     </Box>
                 </Box>

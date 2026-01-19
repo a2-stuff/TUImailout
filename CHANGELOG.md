@@ -2,6 +2,41 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.3.5] - 2026-01-19
+### Added
+- **Templates Manager:** New view to manage HTML templates
+  - List all templates in the `templates/` directory
+  - **View in Browser:** Instantly open any template in your default browser to preview the design
+  - **Rename Templates:** Rename template folders directly within the app
+  - **Delete Templates:** Permanent deletion with safety confirmation
+- **List Deletion:** Added ability to delete CSV lists from the Lists Manager with confirmation
+- **Provider Validation:** Campaigns now validate provider connectivity **before** starting to prevent "fake success" on bad credentials
+
+### Improved
+- **SMTP Reliability:** Added explicit `transporter.verify()` and timeout handling (Connection/Greeting/Socket) to detect invalid credentials early
+- **Scrollable Logs:** The Logs Manager now supports vertical scrolling with ↑/↓ keys for long log history
+- **UI/UX:** Added next-step menus after provider configuration for immediate testing; improved menu layout on Home screen
+
+
+## [1.3.4] - 2026-01-19
+### Added
+- **Custom SMTP Support:** Support for multiple custom SMTP providers
+  - Management of multiple SMTP configurations (Host, Port, TLS, Credentials)
+  - Manual send via custom SMTP
+  - Campaign support: select any configured SMTP server for mass campaigns
+  - Integrated `nodemailer` for robust SMTP delivery
+- **Create New List:** New feature to create CSV lists directly in the app
+  - Paste multi-line text (email lists) to create new lists
+  - Automatic CSV header detection and addition (`email,name`)
+  - Automatic blank line filtering
+- **Shortcut Hints:** Added `(Q)` hints to all "Back to Home/Menu" buttons and updated ESC help text to include `Q` shortcut
+
+### Improved
+- **Logging Display:** Enhanced log visibility for large messages and detailed data
+  - Automated truncation of long log messages
+  - Structured formatting for detailed log objects
+  - Improved readability for high-volume logs
+
 ## [1.3.3] - 2026-01-19
 ### Fixed
 - **HTML Email Support:** All providers (SES, Mailgun, Mailchimp) now send HTML emails instead of plain text

@@ -30,3 +30,20 @@ export const sendMailchimpEmail = async (from: string, to: string[], subject: st
 
     return response;
 };
+
+export const testMailchimpConnection = async () => {
+    const apiKey = getConfig<string>('mailchimpApiKey');
+
+    if (!apiKey) {
+        throw new Error('Missing Mailchimp API Key.');
+    }
+
+    const { default: mailchimpTx } = await import('@mailchimp/mailchimp_transactional');
+    const client = (mailchimpTx as any)(apiKey);
+
+    const response = await client.users.ping();
+    if (response === 'PONG!') {
+        return true;
+    }
+    throw new Error('Mailchimp ping failed.');
+};

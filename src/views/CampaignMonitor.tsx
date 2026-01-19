@@ -118,7 +118,7 @@ const CampaignMonitor: React.FC<Props> = ({ setView, theme }) => {
         menuItems.push({ label: 'No active campaigns', value: 'NONE' });
     }
 
-    menuItems.push({ label: 'Back to Home', value: 'HOME' });
+    menuItems.push({ label: '(Q) Back to Home', value: 'HOME' });
 
     return (
         <Box flexDirection="column" height="100%">

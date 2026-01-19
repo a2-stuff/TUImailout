@@ -26,3 +26,22 @@ export const sendSesEmail = async (from: string, to: string[], subject: string, 
 
     return await client.send(command);
 };
+
+export const testSesConnection = async () => {
+    const accessKeyId = getConfig<string>('awsAccessKeyId');
+    const secretAccessKey = getConfig<string>('awsSecretAccessKey');
+    const region = getConfig<string>('awsRegion');
+
+    if (!accessKeyId || !secretAccessKey || !region) {
+        throw new Error('Missing AWS Credentials.');
+    }
+
+    const { SESClient, GetSendQuotaCommand } = await import("@aws-sdk/client-ses");
+    const client = new SESClient({
+        region,
+        credentials: { accessKeyId, secretAccessKey }
+    });
+
+    await client.send(new GetSendQuotaCommand({}));
+    return true;
+};

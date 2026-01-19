@@ -112,7 +112,7 @@ const FromEmails: React.FC<Props> = ({ theme, isFocused, onDone }) => {
             label: `${addr.name} <${addr.email}>`,
             value: `ADDR_${index}`
         })),
-        { label: 'Back to Menu', value: 'BACK' }
+        { label: '(Q) Back to Menu', value: 'BACK' }
     ];
 
     return (

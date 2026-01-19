@@ -16,10 +16,11 @@ const Home: React.FC<Props> = ({ setView, theme }) => {
         { label: '2. Monitor Campaigns', value: ViewName.CAMPAIGN_MONITOR },
         { label: '3. Manual Sending', value: ViewName.MANUAL_MENU },
         { label: '4. Lists Manager', value: ViewName.LISTS },
-        { label: '5. Logs Manager', value: ViewName.LOGS },
-        { label: '6. Settings', value: ViewName.SETTINGS },
-        { label: '7. Info / About', value: ViewName.INFO },
-        { label: '8. Exit', value: 'EXIT' },
+        { label: '5. Templates Manager', value: ViewName.TEMPLATES },
+        { label: '6. Logs Manager', value: ViewName.LOGS },
+        { label: '7. Settings', value: ViewName.SETTINGS },
+        { label: '8. Info / About', value: ViewName.INFO },
+        { label: '9. Exit', value: 'EXIT' },
     ];
 
     const handleSelect = (item: any) => {
@@ -41,10 +42,11 @@ const Home: React.FC<Props> = ({ setView, theme }) => {
             '2': ViewName.CAMPAIGN_MONITOR,
             '3': ViewName.MANUAL_MENU,
             '4': ViewName.LISTS,
-            '5': ViewName.LOGS,
-            '6': ViewName.SETTINGS,
-            '7': ViewName.INFO,
-            '8': 'EXIT'
+            '5': ViewName.TEMPLATES,
+            '6': ViewName.LOGS,
+            '7': ViewName.SETTINGS,
+            '8': ViewName.INFO,
+            '9': 'EXIT'
         };
 
         if (numMap[input]) {
@@ -74,7 +76,7 @@ const Home: React.FC<Props> = ({ setView, theme }) => {
                     />
                 </Box>
                 <Box marginTop={1}>
-                    <Text color="gray" italic>Press number keys 1-8 or use ↑/↓ arrows to navigate</Text>
+                    <Text color="gray" italic>Press number keys 1-9 or use ↑/↓ arrows to navigate</Text>
                 </Box>
             </Box>
         </Box>

@@ -31,6 +31,12 @@ const ListsMenu: React.FC<Props> = ({ setView, theme }) => {
     const [isEditingContent, setIsEditingContent] = useState(false);
     const [showActionMenu, setShowActionMenu] = useState(false);
 
+    // Create new list states
+    const [createMode, setCreateMode] = useState(false);
+    const [newListName, setNewListName] = useState('');
+    const [newListContent, setNewListContent] = useState('');
+    const [createStep, setCreateStep] = useState<'name' | 'content'>('name');
+
     useEffect(() => {
         loadLists();
     }, []);
@@ -81,7 +87,45 @@ const ListsMenu: React.FC<Props> = ({ setView, theme }) => {
         }
     };
 
+    const createNewList = () => {
+        if (!newListName) return;
+
+        const listDir = path.join(process.cwd(), 'lists');
+        const fileName = newListName.endsWith('.csv') ? newListName : `${newListName}.csv`;
+        const filePath = path.join(listDir, fileName);
+
+        // Prepare content: add header if not present
+        let content = newListContent.trim();
+        if (!content.toLowerCase().startsWith('email')) {
+            content = 'email,name\n' + content;
+        }
+
+        // Filter out blank lines
+        const lines = content.split('\n').filter(line => line.trim() !== '');
+        content = lines.join('\n');
+
+        fs.writeFileSync(filePath, content, 'utf-8');
+
+        // Reset and reload
+        setCreateMode(false);
+        setNewListName('');
+        setNewListContent('');
+        setCreateStep('name');
+        loadLists();
+    };
+
     useInput((input, key) => {
+        // Handle create mode
+        if (createMode) {
+            if (key.escape || input === 'q' || input === 'Q') {
+                setCreateMode(false);
+                setNewListName('');
+                setNewListContent('');
+                setCreateStep('name');
+            }
+            return;
+        }
+
         if (editMode && !isEditingContent) {
             if (showActionMenu) {
                 // When action menu is shown, ESC returns to line navigation
@@ -165,7 +209,9 @@ const ListsMenu: React.FC<Props> = ({ setView, theme }) => {
         menuItems.push({ label: 'No CSV files found', value: 'NONE' });
     }
 
-    menuItems.push({ label: 'Back to Home', value: 'HOME' });
+    menuItems.push({ label: '---', value: 'DIVIDER' });
+    menuItems.push({ label: '+ Create New List', value: 'CREATE' });
+    menuItems.push({ label: '(Q) Back to Home', value: 'HOME' });
 
     const renderEditMode = () => {
         return (
@@ -205,51 +251,139 @@ const ListsMenu: React.FC<Props> = ({ setView, theme }) => {
                 <Box marginTop={2} flexDirection="column">
                     <Text color={theme.accent} bold>Controls:</Text>
                     <Text>↑/↓ - Navigate lines | Enter - Edit current line</Text>
-                    <Text>Tab - Toggle save menu | ESC - {showActionMenu ? 'Back to navigation' : 'Cancel and return'}</Text>
+                    <Text>TAB - Save list | ESC - Cancel</Text>
                 </Box>
 
-                {showActionMenu && (
-                    <Box marginTop={1}>
-                        <SelectInput
-                            items={[
-                                { label: 'Save Changes', value: 'save' },
-                                { label: 'Cancel', value: 'cancel' }
-                            ]}
-                            isFocused={true}
-                            onSelect={(item) => {
-                                if (item.value === 'save') {
-                                    saveFile();
-                                    setShowActionMenu(false);
-                                } else {
-                                    setEditMode(false);
-                                    setFocusedPane('content');
-                                    setShowActionMenu(false);
-                                }
-                            }}
-                            indicatorComponent={({ isSelected }) =>
-                                <Text color={isSelected ? theme.accent : theme.text}>
-                                    {isSelected ? '> ' : '  '}
-                                </Text>
+                <Box marginTop={1} padding={1} borderStyle="single" borderColor={theme.accent}>
+                    <SelectInput
+                        items={[
+                            { label: '💾 SAVE LIST CHANGES', value: 'save' },
+                            { label: '❌ CANCEL', value: 'cancel' }
+                        ]}
+                        isFocused={focusedPane === 'content'}
+                        onSelect={(item) => {
+                            if (item.value === 'save') {
+                                saveFile();
+                            } else {
+                                setEditMode(false);
+                                setFocusedPane('content');
+                                setShowActionMenu(false);
                             }
-                            itemComponent={({ isSelected, label }) =>
-                                <Text color={isSelected ? theme.primary : theme.text}>
-                                    {label}
-                                </Text>
-                            }
-                        />
-                    </Box>
-                )}
+                        }}
+                        indicatorComponent={({ isSelected }) =>
+                            <Text color={isSelected ? theme.accent : theme.text}>
+                                {isSelected ? '> ' : '  '}
+                            </Text>
+                        }
+                        itemComponent={({ isSelected, label }) =>
+                            <Text color={isSelected ? theme.success || 'green' : theme.text} bold={isSelected}>
+                                {label}
+                            </Text>
+                        }
+                    />
+                </Box>
             </Box>
         );
     };
 
+    const renderCreateMode = () => {
+        return (
+            <Box flexDirection="column">
+                <Box marginBottom={1}>
+                    <Text color={theme.primary} bold>Create New List</Text>
+                </Box>
+
+                <Box flexDirection="column" borderStyle="single" borderColor={theme.secondary} padding={1}>
+                    {createStep === 'name' ? (
+                        <Box flexDirection="column">
+                            <Box marginBottom={1}>
+                                <Text color={theme.accent}>Step 1: Enter filename</Text>
+                            </Box>
+                            <Box marginBottom={1}>
+                                <Text>Filename: </Text>
+                                <TextInput
+                                    value={newListName}
+                                    onChange={setNewListName}
+                                    onSubmit={() => {
+                                        if (newListName.trim()) {
+                                            setCreateStep('content');
+                                        }
+                                    }}
+                                    placeholder="my-list"
+                                    focus={true}
+                                />
+                                <Text color="gray">.csv</Text>
+                            </Box>
+                            <Text color="gray" dimColor>Press Enter to continue</Text>
+                        </Box>
+                    ) : (
+                        <Box flexDirection="column">
+                            <Box marginBottom={1}>
+                                <Text color={theme.accent}>Step 2: Paste email list (one per line or comma-separated)</Text>
+                            </Box>
+                            <Box marginBottom={1} flexDirection="column">
+                                <Text color="gray">Format: email,name OR just email</Text>
+                                <Text color="gray">Example:</Text>
+                                <Text color="gray" dimColor>  john@example.com,John Doe</Text>
+                                <Text color="gray" dimColor>  jane@example.com</Text>
+                            </Box>
+                            <Box marginBottom={1}>
+                                <TextInput
+                                    value={newListContent}
+                                    onChange={setNewListContent}
+                                    onSubmit={() => {
+                                        if (newListContent.trim()) {
+                                            createNewList();
+                                        }
+                                    }}
+                                    placeholder="Paste email list here..."
+                                    focus={true}
+                                />
+                            </Box>
+                            <Text color="gray" dimColor>Paste multi-line text and press Enter to save</Text>
+                            <Text color="gray" dimColor>ESC or Q to cancel</Text>
+                        </Box>
+                    )}
+                </Box>
+
+                <Box marginTop={2}>
+                    <Text color="gray">💡 Tip: The header (email,name) will be added automatically if not present</Text>
+                </Box>
+            </Box>
+        );
+    };
+
+    const deleteList = () => {
+        if (selectedList) {
+            try {
+                fs.unlinkSync(selectedList.path);
+                setSelectedList(null);
+                setFocusedPane('menu');
+                loadLists();
+            } catch (error: any) {
+                console.error(`Failed to delete list: ${error.message}`);
+            }
+        }
+    };
+
     const renderContent = () => {
+        if (createMode) {
+            return renderCreateMode();
+        }
+
         if (editMode) {
             return renderEditMode();
         }
 
         if (!selectedList) {
-            return <Text color="gray">Select a list from the left menu.</Text>;
+            return <Box flexDirection="column">
+                <Text color="gray">Select a list from the left menu.</Text>
+                {lists.length === 0 && (
+                    <Box marginTop={1}>
+                        <Text color="gray">You can create a new list using the menu on the left.</Text>
+                    </Box>
+                )}
+            </Box>;
         }
 
         const preview = getFilePreview(selectedList.path);
@@ -281,7 +415,8 @@ const ListsMenu: React.FC<Props> = ({ setView, theme }) => {
                     <SelectInput
                         items={[
                             { label: 'Edit File', value: 'edit' },
-                            { label: 'Back to Menu', value: 'back' }
+                            { label: 'Delete List', value: 'delete' },
+                            { label: '(Q) Back to Menu', value: 'back' }
                         ]}
                         isFocused={focusedPane === 'content'}
                         onSelect={(item) => {
@@ -289,6 +424,11 @@ const ListsMenu: React.FC<Props> = ({ setView, theme }) => {
                                 loadFileContent(selectedList.path);
                                 setEditMode(true);
                                 setShowActionMenu(false);
+                            } else if (item.value === 'delete') {
+                                setEditMode(false);
+                                setCreateMode(false);
+                                // Simple confirmation could be another step, but I'll add an "Are you sure?" menu
+                                setStep('confirmDelete');
                             } else {
                                 setFocusedPane('menu');
                             }
@@ -309,6 +449,81 @@ const ListsMenu: React.FC<Props> = ({ setView, theme }) => {
         );
     };
 
+    const [step, setStep] = useState<'view' | 'confirmDelete'>('view');
+
+    const renderConfirmDelete = () => {
+        return (
+            <Box flexDirection="column">
+                <Box marginBottom={1}>
+                    <Text color="red" bold>Are you sure you want to delete "{selectedList?.name}"?</Text>
+                </Box>
+                <Box marginBottom={1}>
+                    <Text color="gray">This action cannot be undone.</Text>
+                </Box>
+                <SelectInput
+                    items={[
+                        { label: 'No, Keep it', value: 'cancel' },
+                        { label: 'Yes, Delete permanentely', value: 'confirm' }
+                    ]}
+                    isFocused={focusedPane === 'content'}
+                    onSelect={(item) => {
+                        if (item.value === 'confirm') {
+                            deleteList();
+                            setStep('view');
+                        } else {
+                            setStep('view');
+                        }
+                    }}
+                    indicatorComponent={({ isSelected }) =>
+                        <Text color={isSelected ? theme.accent : theme.text}>
+                            {isSelected ? '> ' : '  '}
+                        </Text>
+                    }
+                    itemComponent={({ isSelected, label }) =>
+                        <Text color={isSelected ? (label.includes('Delete') ? 'red' : theme.primary) : theme.text}>
+                            {label}
+                        </Text>
+                    }
+                />
+            </Box>
+        );
+    };
+
+    const mainRenderContent = () => {
+        if (step === 'confirmDelete') return renderConfirmDelete();
+        return renderContent();
+    };
+
+    const [focusedSection, setFocusedSection] = useState<'files' | 'actions'>('files');
+
+    const fileItems = lists.map(list => ({
+        label: list.name,
+        value: list.name
+    }));
+
+    const actionItems = [
+        { label: '+ Create New List', value: 'CREATE' },
+        { label: '(Q) Back to Home', value: 'HOME' }
+    ];
+
+    useInput((input, key) => {
+        if (createMode || editMode || step !== 'view') return;
+
+        if (focusedPane === 'menu') {
+            if (key.tab) {
+                setFocusedSection(prev => prev === 'files' ? 'actions' : 'files');
+            }
+        }
+    });
+
+    // Actually, it's easier to just handle it in onSelect and onHighlight of a single list if I skip the divider.
+    // To truly NOT NAVIGATE to separators, they must be removed from the items array.
+
+    const combinedItems = [
+        ...fileItems,
+        ...actionItems
+    ];
+
     return (
         <Box flexDirection="column" height="100%">
             <Header theme={theme} title="Lists Manager" />
@@ -316,24 +531,23 @@ const ListsMenu: React.FC<Props> = ({ setView, theme }) => {
             <Box flexDirection="row" flexGrow={1}>
                 {/* Left Pane: List of CSV files */}
                 <Box width="30%" flexDirection="column" padding={1} borderRightColor={theme.secondary} borderStyle="single">
-                    <Text color={theme.accent} bold>CSV Lists</Text>
-                    <Box marginTop={1}>
+                    <Header theme={theme} title="CSV Lists" compact={true} />
+                    <Box marginTop={1} flexDirection="column">
                         <SelectInput
-                            items={menuItems}
-                            isFocused={focusedPane === 'menu' && !editMode}
+                            items={fileItems.length > 0 ? fileItems : [{ label: 'No CSV files found', value: 'NONE' }]}
+                            isFocused={focusedPane === 'menu' && !editMode && step === 'view' && focusedSection === 'files'}
                             onSelect={(item) => {
-                                if (item.value === 'HOME') {
-                                    setView(ViewName.HOME);
-                                } else if (item.value !== 'NONE') {
+                                if (item.value !== 'NONE') {
                                     const list = lists.find(l => l.name === item.value);
                                     if (list) {
                                         setSelectedList(list);
                                         setFocusedPane('content');
+                                        setStep('view');
                                     }
                                 }
                             }}
                             onHighlight={(item) => {
-                                if (item.value !== 'HOME' && item.value !== 'NONE') {
+                                if (item.value !== 'NONE') {
                                     const list = lists.find(l => l.name === item.value);
                                     if (list) {
                                         setSelectedList(list);
@@ -341,12 +555,40 @@ const ListsMenu: React.FC<Props> = ({ setView, theme }) => {
                                 }
                             }}
                             indicatorComponent={({ isSelected }) =>
-                                <Text color={isSelected ? (focusedPane === 'menu' ? theme.accent : 'gray') : theme.text}>
+                                <Text color={isSelected ? (focusedPane === 'menu' && focusedSection === 'files' ? theme.accent : 'gray') : theme.text}>
                                     {isSelected ? '> ' : '  '}
                                 </Text>
                             }
                             itemComponent={({ isSelected, label }) =>
-                                <Text color={isSelected ? (focusedPane === 'menu' ? theme.primary : theme.secondary) : theme.text}>
+                                <Text color={isSelected ? (focusedPane === 'menu' && focusedSection === 'files' ? theme.primary : theme.secondary) : theme.text}>
+                                    {label}
+                                </Text>
+                            }
+                        />
+
+                        {/* Separator as static text */}
+                        <Box paddingLeft={2} marginTop={1} marginBottom={1}>
+                            <Text color="gray">────────────────</Text>
+                        </Box>
+
+                        <SelectInput
+                            items={actionItems}
+                            isFocused={focusedPane === 'menu' && !editMode && step === 'view' && focusedSection === 'actions'}
+                            onSelect={(item) => {
+                                if (item.value === 'HOME') {
+                                    setView(ViewName.HOME);
+                                } else if (item.value === 'CREATE') {
+                                    setCreateMode(true);
+                                    setCreateStep('name');
+                                }
+                            }}
+                            indicatorComponent={({ isSelected }) =>
+                                <Text color={isSelected ? (focusedPane === 'menu' && focusedSection === 'actions' ? theme.accent : 'gray') : theme.text}>
+                                    {isSelected ? '> ' : '  '}
+                                </Text>
+                            }
+                            itemComponent={({ isSelected, label }) =>
+                                <Text color={isSelected ? (focusedPane === 'menu' && focusedSection === 'actions' ? theme.primary : theme.secondary) : theme.text}>
                                     {label}
                                 </Text>
                             }
@@ -354,14 +596,17 @@ const ListsMenu: React.FC<Props> = ({ setView, theme }) => {
                     </Box>
                     <Box marginTop={2}>
                         <Text color="gray" dimColor>
-                            {editMode ? 'Editing...' : focusedPane === 'menu' ? '↑/↓ Select  Enter/→ View' : 'ESC/← Back to Menu'}
+                            {editMode ? 'Editing...' : focusedPane === 'menu' ? '↑/↓ Select  Enter/→ View' : 'ESC/Q/← Back to Menu'}
                         </Text>
+                        {focusedPane === 'menu' && (
+                            <Text color="gray" dimColor>TAB to switch categories</Text>
+                        )}
                     </Box>
                 </Box>
 
                 {/* Right Pane: File details and actions */}
                 <Box width="70%" padding={2} flexDirection="column" borderStyle="single" borderColor={theme.secondary}>
-                    {renderContent()}
+                    {mainRenderContent()}
                 </Box>
             </Box>
         </Box>
