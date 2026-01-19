@@ -12,6 +12,8 @@ import FromEmails from './views/settings/FromEmails.js';
 import Info from './views/Info.js';
 import CampaignSetup from './views/CampaignSetup.js';
 import CampaignMonitor from './views/CampaignMonitor.js';
+import SendMailchimp from './views/SendMailchimp.js';
+import Mailchimp from './views/settings/Mailchimp.js';
 import BootAnimation from './components/BootAnimation.js';
 import ExitAnimation from './components/ExitAnimation.js';
 import { getTheme, type Theme } from './utils/themes.js';
@@ -45,6 +47,8 @@ const App = () => {
                 return <SendSES setView={setCurrentView} theme={theme} />;
             case ViewName.SEND_MAILGUN:
                 return <SendMailgun setView={setCurrentView} theme={theme} />;
+            case ViewName.SEND_MAILCHIMP:
+                return <SendMailchimp setView={setCurrentView} theme={theme} />;
             case ViewName.CAMPAIGN_SETUP:
                 return <CampaignSetup setView={setCurrentView} theme={theme} />;
             case ViewName.CAMPAIGN_MONITOR:
@@ -55,6 +59,8 @@ const App = () => {
                 return <AmazonSES setView={setCurrentView} theme={theme} />;
             case ViewName.SETTINGS_MAILGUN:
                 return <Mailgun setView={setCurrentView} theme={theme} />;
+            case ViewName.SETTINGS_MAILCHIMP:
+                return <Mailchimp setView={setCurrentView} theme={theme} />;
             case ViewName.SETTINGS_FROM_EMAILS:
                 return <FromEmails setView={setCurrentView} theme={theme} />;
             case ViewName.INFO:

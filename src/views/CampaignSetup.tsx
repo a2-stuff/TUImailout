@@ -10,7 +10,7 @@ import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import { spawn } from 'child_process';
 import { saveCampaign } from '../utils/campaigns.js';
-import { isSesConfigured, isMailgunConfigured } from '../utils/config.js';
+import { isSesConfigured, isMailgunConfigured, isMailchimpConfigured } from '../utils/config.js';
 import FromSelector from '../components/FromSelector.js';
 
 interface Props {
@@ -22,11 +22,11 @@ const CampaignSetup: React.FC<Props> = ({ setView, theme }) => {
     const [step, setStep] = useState(0);
     const [templates, setTemplates] = useState<any[]>([]);
     const [lists, setLists] = useState<any[]>([]);
-    
+
     // Form Data
     const [selectedTemplate, setSelectedTemplate] = useState('');
     const [selectedList, setSelectedList] = useState('');
-    const [provider, setProvider] = useState<'ses' | 'mailgun'>('ses');
+    const [provider, setProvider] = useState<'ses' | 'mailgun' | 'mailchimp'>('ses');
     const [rateLimit, setRateLimit] = useState('60');
     const [campaignName, setCampaignName] = useState('');
     const [fromEmail, setFromEmail] = useState('');
@@ -80,14 +80,14 @@ const CampaignSetup: React.FC<Props> = ({ setView, theme }) => {
         // Worker: dist/worker.js.
         // So path is path.join(__dirname, '..', 'worker.js');
         const workerPath = path.join(__dirname, '..', 'worker.js');
-        
+
         const child = spawn('node', [workerPath, id], {
             detached: true,
             stdio: 'ignore'
         });
-        
+
         child.unref();
-        
+
         setView(ViewName.CAMPAIGN_MONITOR);
     };
 
@@ -126,11 +126,15 @@ const CampaignSetup: React.FC<Props> = ({ setView, theme }) => {
                 <Text color={theme.accent}>Select Provider:</Text>
                 <SelectInput items={[
                     { label: 'Amazon SES', value: 'ses' },
-                    { label: 'Mailgun', value: 'mailgun' }
+                    { label: 'Mailgun', value: 'mailgun' },
+                    { label: 'Mailchimp', value: 'mailchimp' }
                 ]} onSelect={(item: any) => {
-                    const prov = item.value as 'ses' | 'mailgun';
-                    const isConfigured = prov === 'ses' ? isSesConfigured() : isMailgunConfigured();
-                    
+                    const prov = item.value as 'ses' | 'mailgun' | 'mailchimp';
+                    let isConfigured = false;
+                    if (prov === 'ses') isConfigured = isSesConfigured();
+                    else if (prov === 'mailgun') isConfigured = isMailgunConfigured();
+                    else if (prov === 'mailchimp') isConfigured = isMailchimpConfigured();
+
                     if (!isConfigured) {
                         setStep(7); // Error step
                         setProvider(prov);
@@ -188,7 +192,7 @@ const CampaignSetup: React.FC<Props> = ({ setView, theme }) => {
         // 7: Provider Configuration Error
         (
             <Box flexDirection="column">
-                <Text color="red" bold>Error: {provider === 'ses' ? 'Amazon SES' : 'Mailgun'} is not configured!</Text>
+                <Text color="red" bold>Error: {provider === 'ses' ? 'Amazon SES' : provider === 'mailgun' ? 'Mailgun' : 'Mailchimp'} is not configured!</Text>
                 <Box marginTop={1}>
                     <Text>Please configure your API keys in the Settings menu before starting a campaign.</Text>
                 </Box>

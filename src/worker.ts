@@ -1,6 +1,7 @@
 import fs from 'fs';
 import { sendSesEmail } from './controllers/ses.js';
 import { sendMailgunEmail } from './controllers/mailgun.js';
+import { sendMailchimpEmail } from './controllers/mailchimp.js';
 import { getCampaign, saveCampaign } from './utils/campaigns.js';
 import { parse } from 'csv-parse/sync';
 
@@ -40,7 +41,7 @@ const run = async () => {
         for (let i = 0; i < records.length; i++) {
             const record = records[i];
             const email = record.email;
-            
+
             // Simple personalization (replace {{name}})
             let body = templateContent;
             Object.keys(record).forEach((key: string) => {
@@ -50,8 +51,10 @@ const run = async () => {
             try {
                 if (campaign.provider === 'ses') {
                     await sendSesEmail(campaign.from, [email], campaign.name, body);
+                } else if (campaign.provider === 'mailgun') {
+                    await sendMailgunEmail(campaign.from, [email], campaign.name, body);
                 } else {
-                     await sendMailgunEmail(campaign.from, [email], campaign.name, body);
+                    await sendMailchimpEmail(campaign.from, [email], campaign.name, body);
                 }
             } catch (err: any) {
                 console.error(`Failed to send to ${email}: ${err.message}`);

@@ -14,6 +14,7 @@ const ManualMenu: React.FC<Props> = ({ setView, theme }) => {
     const items = [
         { label: 'Send via Amazon SES', value: ViewName.SEND_SES },
         { label: 'Send via Mailgun', value: ViewName.SEND_MAILGUN },
+        { label: 'Send via Mailchimp', value: ViewName.SEND_MAILCHIMP },
         { label: 'Back to Home', value: ViewName.HOME },
     ];
 
