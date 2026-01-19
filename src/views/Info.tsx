@@ -49,12 +49,12 @@ const Info: React.FC<Props> = ({ setView, theme }) => {
                     <Box flexDirection="column">
                         <Text color={theme.primary} bold>Credits</Text>
                         <Box marginTop={1}>
-                            <Text>Created by: @not_jarod</Text>
+                            <Text>Created by: @not_jarod | </Text>
                             <Newline />
                             <Text underline>https://github.com/a2-stuff</Text>
                         </Box>
                         <Box marginTop={1}>
-                            <Text>Repository:</Text>
+                            <Text>Repository: </Text>
                             <Text color={theme.accent} underline>https://github.com/a2-stuff/TUImailout</Text>
                         </Box>
                         <Box marginTop={1}>

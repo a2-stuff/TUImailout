@@ -18,7 +18,7 @@ const LogsManager: React.FC<Props> = ({ setView, theme }) => {
     const [focusedPane, setFocusedPane] = useState<'menu' | 'content'>('menu');
     const [autoRefresh, setAutoRefresh] = useState(true);
     const [scrollOffset, setScrollOffset] = useState(0);
-    const PAGE_SIZE = 15;
+    const PAGE_SIZE = 8;
 
     useEffect(() => {
         loadLogs();
@@ -169,7 +169,7 @@ const LogsManager: React.FC<Props> = ({ setView, theme }) => {
                     <Text color="gray"> ({filteredLogs.length} entries)</Text>
                 </Box>
 
-                <Box flexDirection="column" borderStyle="single" borderColor={focusedPane === 'content' ? theme.accent : theme.secondary} padding={1} minHeight={20}>
+                <Box flexDirection="column" borderStyle="single" borderColor={focusedPane === 'content' ? theme.accent : theme.secondary} padding={1}>
                     {filteredLogs.slice(scrollOffset, scrollOffset + PAGE_SIZE).map((log, index) => {
                         const detailLines = formatDetails(log.details);
 
