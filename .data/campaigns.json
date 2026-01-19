@@ -1,0 +1,15 @@
+[
+  {
+    "id": "c8b365b0-8e70-4d7a-9fb5-d2563be07dc9",
+    "name": "Test01",
+    "templatePath": "/Users/a2/Desktop/Code/TUImailout/templates/marketing01/index.html",
+    "listPath": "/Users/a2/Desktop/Code/TUImailout/lists/dummy_list.csv",
+    "provider": "ses",
+    "status": "pending",
+    "progress": 0,
+    "total": 0,
+    "rateLimit": 60,
+    "startTime": 1768829484652,
+    "from": "test@test.com"
+  }
+]
