@@ -17,13 +17,15 @@ export interface SesProvider {
     accessKeyId: string;
     secretAccessKey: string;
     region: string;
+    rateLimitCount: number;
+    rateLimitPeriod: number;
 }
 
 const AmazonSES: React.FC<Props> = ({ theme, isFocused, onDone }) => {
     const [mode, setMode] = useState<'list' | 'add' | 'edit'>('list');
 
     // Migration & load SES providers
-    const [providers, setProviders] = useState<SesProvider[]>([]);
+    const [providers, setProviders] = useState<SesProvider[]>(getConfig<SesProvider[]>('sesProviders') || []);
 
     useEffect(() => {
         const loadedProviders = getConfig<SesProvider[]>('sesProviders') || [];
@@ -37,7 +39,9 @@ const AmazonSES: React.FC<Props> = ({ theme, isFocused, onDone }) => {
                 name: 'Default SES',
                 accessKeyId: oldKey,
                 secretAccessKey: oldSecret,
-                region: oldRegion
+                region: oldRegion,
+                rateLimitCount: 200,
+                rateLimitPeriod: 24
             };
             const updated = [...loadedProviders, migratedProvider];
             setProviders(updated);
@@ -58,8 +62,10 @@ const AmazonSES: React.FC<Props> = ({ theme, isFocused, onDone }) => {
     const [newAccessKey, setNewAccessKey] = useState('');
     const [newSecretKey, setNewSecretKey] = useState('');
     const [newRegion, setNewRegion] = useState('');
+    const [newRateLimitCount, setNewRateLimitCount] = useState('200');
+    const [newRateLimitPeriod, setNewRateLimitPeriod] = useState('24');
     const [editIndex, setEditIndex] = useState<number>(-1);
-    const [inputField, setInputField] = useState<'name' | 'accessKey' | 'secretKey' | 'region' | 'actions'>('name');
+    const [inputField, setInputField] = useState<'name' | 'accessKey' | 'secretKey' | 'region' | 'rateLimitCount' | 'rateLimitPeriod' | 'actions'>('name');
     const [testStatus, setTestStatus] = useState<{ success?: boolean, error?: string } | null>(null);
     const [isTesting, setIsTesting] = useState(false);
 
@@ -84,7 +90,9 @@ const AmazonSES: React.FC<Props> = ({ theme, isFocused, onDone }) => {
                 name: newName,
                 accessKeyId: newAccessKey,
                 secretAccessKey: newSecretKey,
-                region: newRegion
+                region: newRegion,
+                rateLimitCount: parseInt(newRateLimitCount),
+                rateLimitPeriod: parseInt(newRateLimitPeriod)
             });
             setTestStatus({ success: true });
         } catch (error: any) {
@@ -99,6 +107,8 @@ const AmazonSES: React.FC<Props> = ({ theme, isFocused, onDone }) => {
         setNewAccessKey('');
         setNewSecretKey('');
         setNewRegion('');
+        setNewRateLimitCount('200');
+        setNewRateLimitPeriod('24');
         setInputField('name');
         setEditIndex(-1);
         setTestStatus(null);
@@ -110,7 +120,9 @@ const AmazonSES: React.FC<Props> = ({ theme, isFocused, onDone }) => {
                 name: newName,
                 accessKeyId: newAccessKey,
                 secretAccessKey: newSecretKey,
-                region: newRegion
+                region: newRegion,
+                rateLimitCount: parseInt(newRateLimitCount) || 200,
+                rateLimitPeriod: parseInt(newRateLimitPeriod) || 24
             }];
             setProviders(updated);
             saveConfig('sesProviders', updated);
@@ -127,7 +139,9 @@ const AmazonSES: React.FC<Props> = ({ theme, isFocused, onDone }) => {
                 name: newName,
                 accessKeyId: newAccessKey,
                 secretAccessKey: newSecretKey,
-                region: newRegion
+                region: newRegion,
+                rateLimitCount: parseInt(newRateLimitCount) || 200,
+                rateLimitPeriod: parseInt(newRateLimitPeriod) || 24
             };
             setProviders(updated);
             saveConfig('sesProviders', updated);
@@ -145,7 +159,7 @@ const AmazonSES: React.FC<Props> = ({ theme, isFocused, onDone }) => {
     };
 
     const handleFieldSubmit = () => {
-        const fields: Array<typeof inputField> = ['name', 'accessKey', 'secretKey', 'region', 'actions'];
+        const fields: Array<typeof inputField> = ['name', 'accessKey', 'secretKey', 'region', 'rateLimitCount', 'rateLimitPeriod', 'actions'];
         const currentIndex = fields.indexOf(inputField);
         if (currentIndex < fields.length - 1) {
             setInputField(fields[currentIndex + 1]);
@@ -189,6 +203,8 @@ const AmazonSES: React.FC<Props> = ({ theme, isFocused, onDone }) => {
                                 setNewAccessKey(provider.accessKeyId);
                                 setNewSecretKey(provider.secretAccessKey);
                                 setNewRegion(provider.region);
+                                setNewRateLimitCount((provider.rateLimitCount || 200).toString());
+                                setNewRateLimitPeriod((provider.rateLimitPeriod || 24).toString());
                                 setEditIndex(index);
                                 setInputField('name');
                                 setMode('edit');
@@ -240,6 +256,24 @@ const AmazonSES: React.FC<Props> = ({ theme, isFocused, onDone }) => {
                                 <TextInput value={newRegion} onChange={setNewRegion} onSubmit={handleFieldSubmit} focus={isFocused} placeholder="us-east-1" />
                             ) : (
                                 <Text>{newRegion}</Text>
+                            )}
+                        </Box>
+
+                        <Box>
+                            <Text color={inputField === 'rateLimitCount' ? theme.primary : theme.text}>Max Emails: </Text>
+                            {inputField === 'rateLimitCount' ? (
+                                <TextInput value={newRateLimitCount} onChange={setNewRateLimitCount} onSubmit={handleFieldSubmit} focus={isFocused} placeholder="200" />
+                            ) : (
+                                <Text>{newRateLimitCount}</Text>
+                            )}
+                        </Box>
+
+                        <Box>
+                            <Text color={inputField === 'rateLimitPeriod' ? theme.primary : theme.text}>Period (Hours): </Text>
+                            {inputField === 'rateLimitPeriod' ? (
+                                <TextInput value={newRateLimitPeriod} onChange={setNewRateLimitPeriod} onSubmit={handleFieldSubmit} focus={isFocused} placeholder="24" />
+                            ) : (
+                                <Text>{newRateLimitPeriod}</Text>
                             )}
                         </Box>
                     </Box>

@@ -39,8 +39,7 @@ const run = async () => {
     }
 
     try {
-        campaign.status = 'running';
-        saveCampaign(campaign, false);
+        // Status update moved to after start time check
 
         // Read Template
         const templateContent = fs.readFileSync(campaign.templatePath, 'utf-8');
@@ -88,34 +87,78 @@ const run = async () => {
             throw new Error(errorMsg);
         }
 
-        // Validate Provider Connection
+        // Wait for scheduled start time
+        if (campaign.startTime > Date.now()) {
+            const delay = campaign.startTime - Date.now();
+            logInfo(LogCategory.CAMPAIGN, `Campaign scheduled for future execution. Waiting ${(delay / 1000 / 60).toFixed(1)} minutes...`, { campaignId });
+            
+            // Set status to 'scheduled' if it was pending
+            if (campaign.status === 'pending') {
+                campaign.status = 'scheduled';
+                saveCampaign(campaign, false);
+            }
+
+            // We use a loop with short sleeps to allow for cancellation during wait
+            while (Date.now() < campaign.startTime) {
+                const currentCampaign = getCampaign(campaignId);
+                if (!currentCampaign || ['cancelled', 'completed', 'failed', 'stopped'].includes(currentCampaign.status)) {
+                    logInfo(LogCategory.CAMPAIGN, `Campaign stopped externally while waiting (status: ${currentCampaign?.status}).`, { campaignId });
+                    process.exit(0);
+                }
+                // Sleep 10s
+                await new Promise(resolve => setTimeout(resolve, 10000));
+            }
+            
+            logInfo(LogCategory.CAMPAIGN, `Scheduled time reached. Starting campaign...`, { campaignId });
+            campaign.status = 'running';
+            saveCampaign(campaign, false);
+        } else {
+            campaign.status = 'running';
+            saveCampaign(campaign, false);
+        }
+
+        // Validate Provider Connection & Get Rate Limits
         logInfo(LogCategory.CAMPAIGN, `Validating provider connection: ${campaign.provider}`, { campaignId });
+        
+        let rateLimitCount = 200;
+        let rateLimitPeriod = 24;
+
         try {
             if (campaign.provider === 'ses') {
                 const providers = getConfig<SesProvider[]>('sesProviders') || [];
                 const provider = providers.find(p => p.name === campaign.sesProviderName);
                 if (!provider) throw new Error(`SES Provider "${campaign.sesProviderName}" not found`);
                 await testSesConnection(provider);
+                rateLimitCount = provider.rateLimitCount || 200;
+                rateLimitPeriod = provider.rateLimitPeriod || 24;
             } else if (campaign.provider === 'mailgun') {
                 const providers = getConfig<MailgunProvider[]>('mailgunProviders') || [];
                 const provider = providers.find(p => p.name === campaign.mailgunProviderName);
                 if (!provider) throw new Error(`Mailgun Provider "${campaign.mailgunProviderName}" not found`);
                 await testMailgunConnection(provider);
+                rateLimitCount = provider.rateLimitCount || 200;
+                rateLimitPeriod = provider.rateLimitPeriod || 24;
             } else if (campaign.provider === 'mailchimp') {
                 const providers = getConfig<MailchimpProvider[]>('mailchimpProviders') || [];
                 const provider = providers.find(p => p.name === campaign.mailchimpProviderName);
                 if (!provider) throw new Error(`Mailchimp Provider "${campaign.mailchimpProviderName}" not found`);
                 await testMailchimpConnection(provider);
+                rateLimitCount = provider.rateLimitCount || 200;
+                rateLimitPeriod = provider.rateLimitPeriod || 24;
             } else if (campaign.provider === 'smtp') {
                 const providers = getConfig<SmtpProvider[]>('smtpProviders') || [];
                 const provider = providers.find(p => p.name === campaign.smtpProviderName);
                 if (!provider) throw new Error(`SMTP Provider "${campaign.smtpProviderName}" not found`);
                 await testSmtpConnection(provider);
+                rateLimitCount = provider.rateLimitCount || 200;
+                rateLimitPeriod = provider.rateLimitPeriod || 24;
             } else if (campaign.provider === 'sendgrid') {
                 const providers = getConfig<SendGridProvider[]>('sendGridProviders') || [];
                 const provider = providers.find(p => p.name === campaign.sendGridProviderName);
                 if (!provider) throw new Error(`SendGrid Provider "${campaign.sendGridProviderName}" not found`);
                 await testSendGridConnection(provider);
+                rateLimitCount = provider.rateLimitCount || 200;
+                rateLimitPeriod = provider.rateLimitPeriod || 24;
             }
             logInfo(LogCategory.CAMPAIGN, `Provider connection validated`, { campaignId });
         } catch (connError: any) {
@@ -135,17 +178,57 @@ const run = async () => {
         let sentCount = 0;
         let failedCount = 0;
 
-        const burstSize = campaign.rateLimit;
-        const windowDurationMs = 5 * 60 * 1000;
+        // Calculate burst parameters based on rate limit
+        // Current logic: 5 minute windows with 2 bursts
+        // Rate Limit: X emails every Y hours
+        // Emails per 5 mins = (X / (Y * 60)) * 5
+        const providerEmailsPer5Mins = (rateLimitCount / (rateLimitPeriod * 60)) * 5;
+        const campaignEmailsPer5Mins = (campaign.rateLimitPerMinute || 60) * 5;
+
+        // Take the stricter limit
+        const targetEmailsPer5Mins = Math.min(providerEmailsPer5Mins, campaignEmailsPer5Mins);
+        
+        let burstSize = Math.max(1, Math.floor(targetEmailsPer5Mins));
+        
+        let windowDurationMs = 5 * 60 * 1000;
+        
+        // If target speed is very low (less than 1 email per 5 mins), adjust window
+        if (targetEmailsPer5Mins < 1) {
+            // Recalculate effective emails per minute based on the stricter limit
+            const effectivePerMinute = Math.min(
+                rateLimitCount / (rateLimitPeriod * 60),
+                campaign.rateLimitPerMinute || 60
+            );
+            windowDurationMs = Math.ceil((1 / effectivePerMinute) * 60 * 1000);
+            burstSize = 1;
+        }
+
+        logInfo(LogCategory.CAMPAIGN, `Rate Config -> Provider: ${rateLimitCount}/${rateLimitPeriod}h, Campaign: ${campaign.rateLimitPerMinute}/min. Effective Window: ${Math.round(windowDurationMs/1000)}s, Burst: ${burstSize}`);
 
         while (sentCount < records.length) {
             const windowStartTime = Date.now();
-            logInfo(LogCategory.CAMPAIGN, `Starting new 5-minute window for bursty sending`, { campaignId, windowStartTime });
+            logInfo(LogCategory.CAMPAIGN, `Starting new window for bursty sending`, { campaignId, windowStartTime });
 
-            const marginMs = 60 * 1000;
-            const t1 = Math.floor(Math.random() * (windowDurationMs - marginMs));
-            const t2 = Math.floor(Math.random() * (windowDurationMs - marginMs));
-            const burstDelays = [t1, t2].sort((a, b) => a - b);
+            // Pick 2 random timestamps within the window (leaving margin)
+            // If burstSize is small (1), just pick 1 timestamp
+            const marginMs = Math.min(60 * 1000, windowDurationMs * 0.1); // 10% or 1 min margin
+            
+            const burstDelays: number[] = [];
+            if (burstSize === 1) {
+                 const t1 = Math.floor(Math.random() * (windowDurationMs - marginMs));
+                 burstDelays.push(t1);
+            } else {
+                 const t1 = Math.floor(Math.random() * (windowDurationMs - marginMs));
+                 const t2 = Math.floor(Math.random() * (windowDurationMs - marginMs));
+                 burstDelays.push(...[t1, t2].sort((a, b) => a - b));
+            }
+
+            // Split burstSize across the delays
+            // If burstSize = 1, send 1.
+            // If burstSize > 1, split roughly evenly.
+            const emailsPerBurst = Math.ceil(burstSize / burstDelays.length);
+
+            let emailsInWindowSent = 0;
 
             for (const delay of burstDelays) {
                 const currentCampaign = getCampaign(campaignId);
@@ -154,13 +237,13 @@ const run = async () => {
                     process.exit(0);
                 }
 
-                if (sentCount >= records.length) break;
+                if (sentCount >= records.length || emailsInWindowSent >= burstSize) break;
 
                 const targetTime = windowStartTime + delay;
                 const currentWait = targetTime - Date.now();
 
                 if (currentWait > 0) {
-                    logInfo(LogCategory.CAMPAIGN, `Waiting ${Math.round(currentWait / 1000)}s for next random burst...`, { campaignId });
+                    logInfo(LogCategory.CAMPAIGN, `Waiting ${Math.round(currentWait / 1000)}s for burst...`, { campaignId });
                     await new Promise(resolve => setTimeout(resolve, currentWait));
                 }
 
@@ -170,9 +253,12 @@ const run = async () => {
                     process.exit(0);
                 }
 
-                logInfo(LogCategory.CAMPAIGN, `Executing burst of ${burstSize} emails...`, { campaignId, burstSize });
+                const currentBatchSize = Math.min(emailsPerBurst, burstSize - emailsInWindowSent, records.length - sentCount);
+                if (currentBatchSize <= 0) break;
 
-                for (let b = 0; b < burstSize && sentCount < records.length; b++) {
+                logInfo(LogCategory.CAMPAIGN, `Executing burst of ${currentBatchSize} emails...`, { campaignId });
+
+                for (let b = 0; b < currentBatchSize; b++) {
                     const record = records[sentCount];
                     const emailKey = Object.keys(record).find(k => k.toLowerCase() === 'email');
                     const email = emailKey ? record[emailKey] : null;
@@ -191,15 +277,15 @@ const run = async () => {
 
                     try {
                         if (campaign.provider === 'ses') {
-                            await sendSesEmail(campaign.sesProviderName!, campaign.from, [email], campaign.name, body);
+                            await sendSesEmail(campaign.sesProviderName!, campaign.from, [email], campaign.subject, body);
                         } else if (campaign.provider === 'mailgun') {
-                            await sendMailgunEmail(campaign.mailgunProviderName!, campaign.from, [email], campaign.name, body);
+                            await sendMailgunEmail(campaign.mailgunProviderName!, campaign.from, [email], campaign.subject, body);
                         } else if (campaign.provider === 'mailchimp') {
-                            await sendMailchimpEmail(campaign.mailchimpProviderName!, campaign.from, [email], campaign.name, body);
+                            await sendMailchimpEmail(campaign.mailchimpProviderName!, campaign.from, [email], campaign.subject, body);
                         } else if (campaign.provider === 'smtp') {
-                            await sendSmtpEmail(campaign.smtpProviderName!, campaign.from, [email], campaign.name, body);
+                            await sendSmtpEmail(campaign.smtpProviderName!, campaign.from, [email], campaign.subject, body);
                         } else if (campaign.provider === 'sendgrid') {
-                            await sendSendGridEmail(campaign.sendGridProviderName!, campaign.from, [email], campaign.name, body);
+                            await sendSendGridEmail(campaign.sendGridProviderName!, campaign.from, [email], campaign.subject, body);
                         }
                         logInfo(LogCategory.EMAIL, `Sent to ${email}`, {
                             campaign: campaign.name,
@@ -207,6 +293,13 @@ const run = async () => {
                         });
                     } catch (err: any) {
                         failedCount++;
+                        // Increment rejected count in campaign object (though we only save 'failedCount' logic usually, let's update the persistent object)
+                        // Note: We need to reload campaign object before saving if we want to be safe, but here we are in a loop.
+                        // Actually, we re-read campaign status at start of burst loop.
+                        // Let's just update the local campaign object properties which will be saved.
+                        if (!campaign.rejected) campaign.rejected = 0;
+                        campaign.rejected++;
+                        
                         const errorMsg = `Failed to send to ${email}: ${err.message}`;
                         logError(LogCategory.EMAIL, errorMsg, {
                             campaign: campaign.name,
@@ -217,6 +310,7 @@ const run = async () => {
                     }
 
                     sentCount++;
+                    emailsInWindowSent++;
                     campaign.progress = sentCount;
                     saveCampaign(campaign, false);
 

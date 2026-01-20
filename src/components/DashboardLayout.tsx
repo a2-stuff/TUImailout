@@ -19,7 +19,7 @@ const DashboardLayout: React.FC<Props> = ({ children, theme, viewName }) => {
     const [username, setUsername] = useState('User');
     const [memUsage, setMemUsage] = useState(0);
     const [cpuUsage, setCpuUsage] = useState('0.0');
-    const [campaignStats, setCampaignStats] = useState({ running: 0, total: 0 });
+    const [campaignStats, setCampaignStats] = useState({ running: 0, scheduled: 0, total: 0 });
     const [resourceStats, setResourceStats] = useState({ lists: 0, templates: 0, providers: 0 });
 
     const prevCpu = useRef(process.cpuUsage());
@@ -57,7 +57,8 @@ const DashboardLayout: React.FC<Props> = ({ children, theme, viewName }) => {
             try {
                 const campaigns = getCampaigns();
                 const running = campaigns.filter(c => c.status === 'running').length;
-                setCampaignStats({ running, total: campaigns.length });
+                const scheduled = campaigns.filter(c => c.status === 'scheduled').length;
+                setCampaignStats({ running, scheduled, total: campaigns.length });
             } catch (e) {
                 // Ignore errors reading campaigns
             }
@@ -153,6 +154,8 @@ const DashboardLayout: React.FC<Props> = ({ children, theme, viewName }) => {
                     <Text color={campaignStats.running > 0 ? theme.success : theme.secondary}>{campaignStats.running}</Text>
                     <Text color={theme.secondary}>/</Text>
                     <Text color={campaignStats.running === 0 && campaignStats.total > 0 ? theme.error : theme.secondary}>{campaignStats.total}</Text>
+                    <Text color={theme.secondary} dimColor> | </Text>
+                    <Text color={theme.secondary}>Schedule: {campaignStats.scheduled}</Text>
                     <Text color={theme.secondary} dimColor> | </Text>
                     <Text color={theme.secondary}>
                         Lists: {resourceStats.lists}

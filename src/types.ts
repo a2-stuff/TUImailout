@@ -22,11 +22,14 @@ export interface Campaign {
     sesProviderName?: string;
     mailgunProviderName?: string;
     mailchimpProviderName?: string;
-    status: 'pending' | 'running' | 'completed' | 'failed' | 'stopped' | 'cancelled';
+    status: 'pending' | 'scheduled' | 'running' | 'completed' | 'failed' | 'stopped' | 'cancelled';
     progress: number;
     total: number;
-    rateLimit: number; // emails per minute
     startTime: number;
+    rateLimitPerMinute: number;
     from: string;
+    subject: string;
+    rejected: number;
+    opened: number;
     error?: string;
 }

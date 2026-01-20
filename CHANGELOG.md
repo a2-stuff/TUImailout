@@ -2,6 +2,42 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.4.1] - 2026-01-20
+### Improved
+- **Layout Consistency:** Enforced a fixed 20-line height for all display panels (Lists, Templates, Settings, etc.) to prevent layout shifts.
+- **Campaign Monitor:**
+  - **Action Menu:** Improved "Actions" menu rendering to swap with details view, preventing overflow.
+  - **Navigation:** Fixed focus issue causing double navigation when the actions menu is open.
+  - **Stats:** Added specific "Rejected (API Only)" and "Opened (API Only)" stats.
+  - **Metadata:** Moved "Technical Info ID" to the header for cleaner layout.
+- **Campaign Setup:**
+  - **Input:** Added "Email Subject" as a separate field from "Campaign Name".
+  - **UX:** Added explicit "(Q) Back" options and visual hints to all steps.
+  - **Defaults:** Changed default campaign speed limit to 5 emails/minute.
+  - **Bug Fix:** Fixed "SMTP not configured" error appearing incorrectly due to step index collision.
+- **Dashboard:** Added "Schedule" count to the footer.
+
+## [1.4.0] - 2026-01-20
+### Added
+- **Campaign Scheduling:** New ability to schedule campaigns for future execution.
+  - Choose between starting "Immediately" or at a specific date/time.
+  - Support for relative delays (e.g., "start in 30 minutes").
+  - Automated status management: campaigns transition from `scheduled` to `running` automatically.
+- **Campaign-Level Rate Limiting:** Added a "Campaign Speed Limit" (emails per minute) setting during setup.
+  - Allows precise control over the pacing of individual campaigns.
+  - **Intelligent Throttling:** Automatically respects the stricter of the two limits (Campaign vs. Provider Credential).
+
+### Improved
+- **Worker Logic Refinement:** The background worker now handles idle waiting for scheduled campaigns and dynamic burst calculation for dual-level rate limits.
+
+## [1.3.9] - 2026-01-20
+### Improved
+- **Granular Rate Limiting:** Rate limits are now configured per-credential instead of per-campaign.
+  - **Customizable Limits:** Set specific "Max Emails" and "Period (Hours)" for each provider account (e.g., 200 emails every 24 hours).
+  - **Dynamic Sending:** The campaign worker automatically calculates the optimal sending speed and burst size based on the selected credential's limits.
+  - **Smart Scheduling:** Intelligently handles low-volume limits (like 1 email/day) by adjusting the burst window duration.
+- **UI Cleanup:** Removed the "Rate Limit" step from the campaign setup wizard, as it is now handled automatically by the provider configuration.
+
 ## [1.3.8] - 2026-01-20
 ### Added
 - **SendGrid Support:** Full integration with SendGrid API.

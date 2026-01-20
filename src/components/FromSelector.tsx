@@ -8,6 +8,7 @@ import { getConfig } from '../utils/config.js';
 interface Props {
     theme: Theme;
     onSelect: (email: string) => void;
+    onBack?: () => void;
     isFocused?: boolean;
 }
 
@@ -16,7 +17,7 @@ interface FromAddress {
     name: string;
 }
 
-const FromSelector: React.FC<Props> = ({ theme, onSelect, isFocused = true }) => {
+const FromSelector: React.FC<Props> = ({ theme, onSelect, onBack, isFocused = true }) => {
     const [mode, setMode] = useState<'select' | 'input'>('select');
     const [manualEmail, setManualEmail] = useState('');
 
@@ -52,6 +53,9 @@ const FromSelector: React.FC<Props> = ({ theme, onSelect, isFocused = true }) =>
             value: `${addr.name} <${addr.email}>`
         }));
         items.push({ label: 'Type manually...', value: 'MANUAL' });
+        if (onBack) {
+            items.push({ label: '(Q) Back', value: 'BACK' });
+        }
 
         return (
             <Box flexDirection="column">
@@ -62,6 +66,8 @@ const FromSelector: React.FC<Props> = ({ theme, onSelect, isFocused = true }) =>
                     onSelect={(item) => {
                         if (item.value === 'MANUAL') {
                             setMode('input');
+                        } else if (item.value === 'BACK') {
+                            if (onBack) onBack();
                         } else {
                             onSelect(item.value);
                         }

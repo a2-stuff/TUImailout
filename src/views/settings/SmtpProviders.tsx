@@ -19,6 +19,8 @@ export interface SmtpProvider {
     secure: boolean;
     username: string;
     password: string;
+    rateLimitCount: number;
+    rateLimitPeriod: number;
 }
 
 const SmtpProviders: React.FC<Props> = ({ theme, isFocused, onDone }) => {
@@ -34,8 +36,11 @@ const SmtpProviders: React.FC<Props> = ({ theme, isFocused, onDone }) => {
     const [newSecure, setNewSecure] = useState(true);
     const [newUsername, setNewUsername] = useState('');
     const [newPassword, setNewPassword] = useState('');
+    const [newRateLimitCount, setNewRateLimitCount] = useState('200');
+    const [newRateLimitPeriod, setNewRateLimitPeriod] = useState('24');
+
     const [editIndex, setEditIndex] = useState<number>(-1);
-    const [inputField, setInputField] = useState<'name' | 'host' | 'port' | 'secure' | 'username' | 'password' | 'actions'>('name');
+    const [inputField, setInputField] = useState<'name' | 'host' | 'port' | 'secure' | 'username' | 'password' | 'rateLimitCount' | 'rateLimitPeriod' | 'actions'>('name');
     const [testStatus, setTestStatus] = useState<{ success?: boolean, error?: string } | null>(null);
     const [isTesting, setIsTesting] = useState(false);
 
@@ -62,7 +67,9 @@ const SmtpProviders: React.FC<Props> = ({ theme, isFocused, onDone }) => {
                 port: parseInt(newPort),
                 secure: newSecure,
                 username: newUsername,
-                password: newPassword
+                password: newPassword,
+                rateLimitCount: parseInt(newRateLimitCount),
+                rateLimitPeriod: parseInt(newRateLimitPeriod)
             });
             setTestStatus({ success: true });
         } catch (error: any) {
@@ -79,6 +86,8 @@ const SmtpProviders: React.FC<Props> = ({ theme, isFocused, onDone }) => {
         setNewSecure(true);
         setNewUsername('');
         setNewPassword('');
+        setNewRateLimitCount('200');
+        setNewRateLimitPeriod('24');
         setInputField('name');
         setEditIndex(-1);
         setTestStatus(null);
@@ -92,7 +101,9 @@ const SmtpProviders: React.FC<Props> = ({ theme, isFocused, onDone }) => {
                 port: parseInt(newPort),
                 secure: newSecure,
                 username: newUsername,
-                password: newPassword
+                password: newPassword,
+                rateLimitCount: parseInt(newRateLimitCount) || 200,
+                rateLimitPeriod: parseInt(newRateLimitPeriod) || 24
             }];
             setProviders(updated);
             saveConfig('smtpProviders', updated);
@@ -111,7 +122,9 @@ const SmtpProviders: React.FC<Props> = ({ theme, isFocused, onDone }) => {
                 port: parseInt(newPort),
                 secure: newSecure,
                 username: newUsername,
-                password: newPassword
+                password: newPassword,
+                rateLimitCount: parseInt(newRateLimitCount) || 200,
+                rateLimitPeriod: parseInt(newRateLimitPeriod) || 24
             };
             setProviders(updated);
             saveConfig('smtpProviders', updated);
@@ -129,7 +142,7 @@ const SmtpProviders: React.FC<Props> = ({ theme, isFocused, onDone }) => {
     };
 
     const handleFieldSubmit = () => {
-        const fields: Array<typeof inputField> = ['name', 'host', 'port', 'secure', 'username', 'password', 'actions'];
+        const fields: Array<typeof inputField> = ['name', 'host', 'port', 'secure', 'username', 'password', 'rateLimitCount', 'rateLimitPeriod', 'actions'];
         const currentIndex = fields.indexOf(inputField);
         if (currentIndex < fields.length - 1) {
             setInputField(fields[currentIndex + 1]);
@@ -175,6 +188,8 @@ const SmtpProviders: React.FC<Props> = ({ theme, isFocused, onDone }) => {
                                 setNewSecure(provider.secure);
                                 setNewUsername(provider.username);
                                 setNewPassword(provider.password);
+                                setNewRateLimitCount((provider.rateLimitCount || 200).toString());
+                                setNewRateLimitPeriod((provider.rateLimitPeriod || 24).toString());
                                 setEditIndex(index);
                                 setInputField('name');
                                 setMode('edit');
@@ -256,6 +271,24 @@ const SmtpProviders: React.FC<Props> = ({ theme, isFocused, onDone }) => {
                                 <TextInput value={newPassword} onChange={setNewPassword} onSubmit={handleFieldSubmit} focus={isFocused} placeholder="••••••••" mask="•" />
                             ) : (
                                 <Text>{'•'.repeat(newPassword.length)}</Text>
+                            )}
+                        </Box>
+
+                        <Box>
+                            <Text color={inputField === 'rateLimitCount' ? theme.primary : theme.text}>Max Emails: </Text>
+                            {inputField === 'rateLimitCount' ? (
+                                <TextInput value={newRateLimitCount} onChange={setNewRateLimitCount} onSubmit={handleFieldSubmit} focus={isFocused} placeholder="200" />
+                            ) : (
+                                <Text>{newRateLimitCount}</Text>
+                            )}
+                        </Box>
+
+                        <Box>
+                            <Text color={inputField === 'rateLimitPeriod' ? theme.primary : theme.text}>Period (Hours): </Text>
+                            {inputField === 'rateLimitPeriod' ? (
+                                <TextInput value={newRateLimitPeriod} onChange={setNewRateLimitPeriod} onSubmit={handleFieldSubmit} focus={isFocused} placeholder="24" />
+                            ) : (
+                                <Text>{newRateLimitPeriod}</Text>
                             )}
                         </Box>
                     </Box>

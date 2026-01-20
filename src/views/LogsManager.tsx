@@ -169,7 +169,7 @@ const LogsManager: React.FC<Props> = ({ setView, theme }) => {
                     <Text color="gray"> ({filteredLogs.length} entries)</Text>
                 </Box>
 
-                <Box flexDirection="column" borderStyle="single" borderColor={focusedPane === 'content' ? theme.accent : theme.secondary} padding={1}>
+                <Box flexDirection="column" borderStyle="single" borderColor={focusedPane === 'content' ? theme.accent : theme.secondary} padding={1} height={20}>
                     {filteredLogs.slice(scrollOffset, scrollOffset + PAGE_SIZE).map((log, index) => {
                         const detailLines = formatDetails(log.details);
 

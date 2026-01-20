@@ -14,6 +14,11 @@ A powerful, interactive Terminal User Interface (TUI) application for sending ma
 *   **Mass Campaigns:**
     *   Load HTML templates from local folders (includes standard HTML boilerplate).
     *   Load recipient lists from CSV files.
+    *   **Scheduling:** Schedule campaigns to run instantly or at a specific future date and time.
+    *   **Dual-Level Rate Limiting:** 
+        *   **Provider Limits:** Configure maximum emails per period (e.g., 200 per 24h) per credential.
+        *   **Campaign Speed:** Set a specific emails-per-minute limit for each campaign.
+        *   The system automatically respects the strictest limit to ensure safe delivery.
     *   **Human-like Sending:** "Bursty" sending logic to mimic human behavior and avoid spam filters.
         *   **How it works:** The system operates in 5-minute cycles. In each cycle, it wakes up at two random times to send a "burst" of emails equal to your Rate Limit.
         *   *Example:* If you set a limit of 100, it sends a total of 1000 emails over 25 minutes (sending 200 per 5-minute cycle). If you set a limit of 500, it finishes in ~5 minutes.

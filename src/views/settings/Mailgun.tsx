@@ -17,13 +17,15 @@ export interface MailgunProvider {
     apiKey: string;
     domain: string;
     username: string;
+    rateLimitCount: number;
+    rateLimitPeriod: number;
 }
 
 const Mailgun: React.FC<Props> = ({ theme, isFocused, onDone }) => {
     const [mode, setMode] = useState<'list' | 'add' | 'edit'>('list');
 
     // Migration & load Mailgun providers
-    const [providers, setProviders] = useState<MailgunProvider[]>([]);
+    const [providers, setProviders] = useState<MailgunProvider[]>(getConfig<MailgunProvider[]>('mailgunProviders') || []);
 
     useEffect(() => {
         const loadedProviders = getConfig<MailgunProvider[]>('mailgunProviders') || [];
@@ -37,7 +39,9 @@ const Mailgun: React.FC<Props> = ({ theme, isFocused, onDone }) => {
                 name: 'Default Mailgun',
                 apiKey: oldKey,
                 domain: oldDomain,
-                username: oldUser || 'api'
+                username: oldUser || 'api',
+                rateLimitCount: 200,
+                rateLimitPeriod: 24
             };
             const updated = [...loadedProviders, migratedProvider];
             setProviders(updated);
@@ -58,8 +62,10 @@ const Mailgun: React.FC<Props> = ({ theme, isFocused, onDone }) => {
     const [newApiKey, setNewApiKey] = useState('');
     const [newDomain, setNewDomain] = useState('');
     const [newUsername, setNewUsername] = useState('api');
+    const [newRateLimitCount, setNewRateLimitCount] = useState('200');
+    const [newRateLimitPeriod, setNewRateLimitPeriod] = useState('24');
     const [editIndex, setEditIndex] = useState<number>(-1);
-    const [inputField, setInputField] = useState<'name' | 'apiKey' | 'domain' | 'username' | 'actions'>('name');
+    const [inputField, setInputField] = useState<'name' | 'apiKey' | 'domain' | 'username' | 'rateLimitCount' | 'rateLimitPeriod' | 'actions'>('name');
     const [testStatus, setTestStatus] = useState<{ success?: boolean, error?: string } | null>(null);
     const [isTesting, setIsTesting] = useState(false);
 
@@ -84,7 +90,9 @@ const Mailgun: React.FC<Props> = ({ theme, isFocused, onDone }) => {
                 name: newName,
                 apiKey: newApiKey,
                 domain: newDomain,
-                username: newUsername
+                username: newUsername,
+                rateLimitCount: parseInt(newRateLimitCount),
+                rateLimitPeriod: parseInt(newRateLimitPeriod)
             });
             setTestStatus({ success: true });
         } catch (error: any) {
@@ -99,6 +107,8 @@ const Mailgun: React.FC<Props> = ({ theme, isFocused, onDone }) => {
         setNewApiKey('');
         setNewDomain('');
         setNewUsername('api');
+        setNewRateLimitCount('200');
+        setNewRateLimitPeriod('24');
         setInputField('name');
         setEditIndex(-1);
         setTestStatus(null);
@@ -110,7 +120,9 @@ const Mailgun: React.FC<Props> = ({ theme, isFocused, onDone }) => {
                 name: newName,
                 apiKey: newApiKey,
                 domain: newDomain,
-                username: newUsername
+                username: newUsername,
+                rateLimitCount: parseInt(newRateLimitCount) || 200,
+                rateLimitPeriod: parseInt(newRateLimitPeriod) || 24
             }];
             setProviders(updated);
             saveConfig('mailgunProviders', updated);
@@ -127,7 +139,9 @@ const Mailgun: React.FC<Props> = ({ theme, isFocused, onDone }) => {
                 name: newName,
                 apiKey: newApiKey,
                 domain: newDomain,
-                username: newUsername
+                username: newUsername,
+                rateLimitCount: parseInt(newRateLimitCount) || 200,
+                rateLimitPeriod: parseInt(newRateLimitPeriod) || 24
             };
             setProviders(updated);
             saveConfig('mailgunProviders', updated);
@@ -145,7 +159,7 @@ const Mailgun: React.FC<Props> = ({ theme, isFocused, onDone }) => {
     };
 
     const handleFieldSubmit = () => {
-        const fields: Array<typeof inputField> = ['name', 'apiKey', 'domain', 'username', 'actions'];
+        const fields: Array<typeof inputField> = ['name', 'apiKey', 'domain', 'username', 'rateLimitCount', 'rateLimitPeriod', 'actions'];
         const currentIndex = fields.indexOf(inputField);
         if (currentIndex < fields.length - 1) {
             setInputField(fields[currentIndex + 1]);
@@ -189,6 +203,8 @@ const Mailgun: React.FC<Props> = ({ theme, isFocused, onDone }) => {
                                 setNewApiKey(provider.apiKey);
                                 setNewDomain(provider.domain);
                                 setNewUsername(provider.username);
+                                setNewRateLimitCount((provider.rateLimitCount || 200).toString());
+                                setNewRateLimitPeriod((provider.rateLimitPeriod || 24).toString());
                                 setEditIndex(index);
                                 setInputField('name');
                                 setMode('edit');
@@ -240,6 +256,24 @@ const Mailgun: React.FC<Props> = ({ theme, isFocused, onDone }) => {
                                 <TextInput value={newUsername} onChange={setNewUsername} onSubmit={handleFieldSubmit} focus={isFocused} placeholder="api" />
                             ) : (
                                 <Text>{newUsername}</Text>
+                            )}
+                        </Box>
+
+                        <Box>
+                            <Text color={inputField === 'rateLimitCount' ? theme.primary : theme.text}>Max Emails: </Text>
+                            {inputField === 'rateLimitCount' ? (
+                                <TextInput value={newRateLimitCount} onChange={setNewRateLimitCount} onSubmit={handleFieldSubmit} focus={isFocused} placeholder="200" />
+                            ) : (
+                                <Text>{newRateLimitCount}</Text>
+                            )}
+                        </Box>
+
+                        <Box>
+                            <Text color={inputField === 'rateLimitPeriod' ? theme.primary : theme.text}>Period (Hours): </Text>
+                            {inputField === 'rateLimitPeriod' ? (
+                                <TextInput value={newRateLimitPeriod} onChange={setNewRateLimitPeriod} onSubmit={handleFieldSubmit} focus={isFocused} placeholder="24" />
+                            ) : (
+                                <Text>{newRateLimitPeriod}</Text>
                             )}
                         </Box>
                     </Box>

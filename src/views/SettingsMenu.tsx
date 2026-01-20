@@ -106,7 +106,7 @@ const SettingsMenu: React.FC<Props> = ({ setView, theme, onThemeChange }) => {
 
             <Box flexDirection="row" flexGrow={1}>
                 {/* Left Pane: Menu */}
-                <Box width="30%" flexDirection="column" padding={1} borderRightColor={theme.secondary} borderStyle="single">
+                <Box width="30%" height={20} flexDirection="column" padding={1} borderRightColor={theme.secondary} borderStyle="single">
                     <Text color={theme.accent} bold>Options</Text>
                     <Box marginTop={1}>
                         <SelectInput
@@ -143,7 +143,7 @@ const SettingsMenu: React.FC<Props> = ({ setView, theme, onThemeChange }) => {
                 </Box>
 
                 {/* Right Pane: Content */}
-                <Box width="70%" padding={2} flexDirection="column" borderStyle="single" borderColor={theme.secondary}>
+                <Box width="70%" height={20} padding={2} flexDirection="column" borderStyle="single" borderColor={theme.secondary}>
                     {renderContent()}
                 </Box>
             </Box>

@@ -270,7 +270,7 @@ const TemplatesMenu: React.FC<Props> = ({ setView, theme }) => {
             <Header theme={theme} title="Templates Manager" />
 
             <Box flexDirection="row" flexGrow={1}>
-                <Box width="30%" flexDirection="column" padding={1} borderRightColor={theme.secondary} borderStyle="single">
+                <Box width="30%" height={20} flexDirection="column" padding={1} borderRightColor={theme.secondary} borderStyle="single">
                     <Header theme={theme} title="Templates" compact={true} />
                     <Box marginTop={1} flexDirection="column">
                         <SelectInput
@@ -340,7 +340,7 @@ const TemplatesMenu: React.FC<Props> = ({ setView, theme }) => {
                     </Box>
                 </Box>
 
-                <Box width="70%" padding={2} flexDirection="column" borderStyle="single" borderColor={theme.secondary}>
+                <Box width="70%" height={20} padding={2} flexDirection="column" borderStyle="single" borderColor={theme.secondary}>
                     {renderContent()}
                 </Box>
             </Box>

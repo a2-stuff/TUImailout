@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Box, Text, useInput } from 'ink';
 import TextInput from 'ink-text-input';
 import SelectInput from 'ink-select-input';
@@ -15,6 +15,8 @@ interface Props {
 export interface SendGridProvider {
     name: string;
     apiKey: string;
+    rateLimitCount: number;
+    rateLimitPeriod: number;
 }
 
 const SendGridProviders: React.FC<Props> = ({ theme, isFocused, onDone }) => {
@@ -26,8 +28,10 @@ const SendGridProviders: React.FC<Props> = ({ theme, isFocused, onDone }) => {
     // Add/Edit states
     const [newName, setNewName] = useState('');
     const [newApiKey, setNewApiKey] = useState('');
+    const [newRateLimitCount, setNewRateLimitCount] = useState('200');
+    const [newRateLimitPeriod, setNewRateLimitPeriod] = useState('24');
     const [editIndex, setEditIndex] = useState<number>(-1);
-    const [inputField, setInputField] = useState<'name' | 'apiKey' | 'actions'>('name');
+    const [inputField, setInputField] = useState<'name' | 'apiKey' | 'rateLimitCount' | 'rateLimitPeriod' | 'actions'>('name');
     const [testStatus, setTestStatus] = useState<{ success?: boolean, error?: string } | null>(null);
     const [isTesting, setIsTesting] = useState(false);
 
@@ -50,7 +54,9 @@ const SendGridProviders: React.FC<Props> = ({ theme, isFocused, onDone }) => {
             const { testSendGridConnection } = await import('../../controllers/sendgrid.js');
             await testSendGridConnection({
                 name: newName,
-                apiKey: newApiKey
+                apiKey: newApiKey,
+                rateLimitCount: parseInt(newRateLimitCount),
+                rateLimitPeriod: parseInt(newRateLimitPeriod)
             });
             setTestStatus({ success: true });
         } catch (error: any) {
@@ -63,6 +69,8 @@ const SendGridProviders: React.FC<Props> = ({ theme, isFocused, onDone }) => {
     const resetForm = () => {
         setNewName('');
         setNewApiKey('');
+        setNewRateLimitCount('200');
+        setNewRateLimitPeriod('24');
         setInputField('name');
         setEditIndex(-1);
         setTestStatus(null);
@@ -72,7 +80,9 @@ const SendGridProviders: React.FC<Props> = ({ theme, isFocused, onDone }) => {
         if (newName && newApiKey) {
             const updated = [...providers, {
                 name: newName,
-                apiKey: newApiKey
+                apiKey: newApiKey,
+                rateLimitCount: parseInt(newRateLimitCount) || 200,
+                rateLimitPeriod: parseInt(newRateLimitPeriod) || 24
             }];
             setProviders(updated);
             saveConfig('sendGridProviders', updated);
@@ -87,7 +97,9 @@ const SendGridProviders: React.FC<Props> = ({ theme, isFocused, onDone }) => {
             const updated = [...providers];
             updated[editIndex] = {
                 name: newName,
-                apiKey: newApiKey
+                apiKey: newApiKey,
+                rateLimitCount: parseInt(newRateLimitCount) || 200,
+                rateLimitPeriod: parseInt(newRateLimitPeriod) || 24
             };
             setProviders(updated);
             saveConfig('sendGridProviders', updated);
@@ -105,7 +117,7 @@ const SendGridProviders: React.FC<Props> = ({ theme, isFocused, onDone }) => {
     };
 
     const handleFieldSubmit = () => {
-        const fields: Array<typeof inputField> = ['name', 'apiKey', 'actions'];
+        const fields: Array<typeof inputField> = ['name', 'apiKey', 'rateLimitCount', 'rateLimitPeriod', 'actions'];
         const currentIndex = fields.indexOf(inputField);
         if (currentIndex < fields.length - 1) {
             setInputField(fields[currentIndex + 1]);
@@ -147,6 +159,8 @@ const SendGridProviders: React.FC<Props> = ({ theme, isFocused, onDone }) => {
                                 const provider = providers[index];
                                 setNewName(provider.name);
                                 setNewApiKey(provider.apiKey);
+                                setNewRateLimitCount((provider.rateLimitCount || 200).toString());
+                                setNewRateLimitPeriod((provider.rateLimitPeriod || 24).toString());
                                 setEditIndex(index);
                                 setInputField('name');
                                 setMode('edit');
@@ -180,6 +194,24 @@ const SendGridProviders: React.FC<Props> = ({ theme, isFocused, onDone }) => {
                                 <TextInput value={newApiKey} onChange={setNewApiKey} onSubmit={handleFieldSubmit} focus={isFocused} placeholder="SG.xxxxxxxx..." mask="*" />
                             ) : (
                                 <Text>{'*'.repeat(Math.min(newApiKey.length, 20))}</Text>
+                            )}
+                        </Box>
+
+                        <Box>
+                            <Text color={inputField === 'rateLimitCount' ? theme.primary : theme.text}>Max Emails: </Text>
+                            {inputField === 'rateLimitCount' ? (
+                                <TextInput value={newRateLimitCount} onChange={setNewRateLimitCount} onSubmit={handleFieldSubmit} focus={isFocused} placeholder="200" />
+                            ) : (
+                                <Text>{newRateLimitCount}</Text>
+                            )}
+                        </Box>
+
+                        <Box>
+                            <Text color={inputField === 'rateLimitPeriod' ? theme.primary : theme.text}>Period (Hours): </Text>
+                            {inputField === 'rateLimitPeriod' ? (
+                                <TextInput value={newRateLimitPeriod} onChange={setNewRateLimitPeriod} onSubmit={handleFieldSubmit} focus={isFocused} placeholder="24" />
+                            ) : (
+                                <Text>{newRateLimitPeriod}</Text>
                             )}
                         </Box>
                     </Box>
