@@ -5,12 +5,16 @@ interface AppSchema {
 	awsAccessKeyId?: string;
 	awsSecretAccessKey?: string;
 	awsRegion?: string;
+	sesProviders?: any[];
 	mailgunApiKey?: string;
 	mailgunDomain?: string;
 	mailgunUsername?: string;
+	mailgunProviders?: any[];
 	mailchimpApiKey?: string;
+	mailchimpProviders?: any[];
 	fromEmails?: string[];
 	smtpProviders?: any[];
+	sendGridProviders?: any[];
 }
 
 const config = new Conf<AppSchema>({
@@ -18,7 +22,11 @@ const config = new Conf<AppSchema>({
 	defaults: {
 		theme: 'default',
 		fromEmails: [],
-		smtpProviders: []
+		smtpProviders: [],
+		sendGridProviders: [],
+		sesProviders: [],
+		mailgunProviders: [],
+		mailchimpProviders: []
 	}
 });
 
@@ -35,19 +43,27 @@ export const getAllConfig = (): AppSchema => {
 }
 
 export const isSesConfigured = (): boolean => {
-	return !!(config.get('awsAccessKeyId') && config.get('awsSecretAccessKey') && config.get('awsRegion'));
+	const providers = config.get('sesProviders');
+	return !!(providers && providers.length > 0) || !!(config.get('awsAccessKeyId') && config.get('awsSecretAccessKey') && config.get('awsRegion'));
 };
 
 export const isMailgunConfigured = (): boolean => {
-	return !!(config.get('mailgunApiKey') && config.get('mailgunDomain'));
+	const providers = config.get('mailgunProviders');
+	return !!(providers && providers.length > 0) || !!(config.get('mailgunApiKey') && config.get('mailgunDomain'));
 };
 
 export const isMailchimpConfigured = (): boolean => {
-	return !!(config.get('mailchimpApiKey'));
+	const providers = config.get('mailchimpProviders');
+	return !!(providers && providers.length > 0) || !!(config.get('mailchimpApiKey'));
 };
 
 export const isSmtpConfigured = (): boolean => {
 	const providers = config.get('smtpProviders');
+	return !!(providers && providers.length > 0);
+};
+
+export const isSendGridConfigured = (): boolean => {
+	const providers = config.get('sendGridProviders');
 	return !!(providers && providers.length > 0);
 };
 

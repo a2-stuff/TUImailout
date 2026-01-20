@@ -12,9 +12,13 @@ import { dirname } from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import { spawn } from 'child_process';
 import { saveCampaign } from '../utils/campaigns.js';
-import { isSesConfigured, isMailgunConfigured, isMailchimpConfigured, isSmtpConfigured, getConfig } from '../utils/config.js';
+import { isSesConfigured, isMailgunConfigured, isMailchimpConfigured, isSmtpConfigured, isSendGridConfigured, getConfig } from '../utils/config.js';
 import FromSelector from '../components/FromSelector.js';
 import type { SmtpProvider } from './settings/SmtpProviders.js';
+import type { SendGridProvider } from './settings/SendGridProviders.js';
+import type { SesProvider } from './settings/AmazonSES.js';
+import type { MailgunProvider } from './settings/Mailgun.js';
+import type { MailchimpProvider } from './settings/Mailchimp.js';
 
 // ES module equivalent of __dirname
 const __filename = fileURLToPath(import.meta.url);
@@ -33,8 +37,15 @@ const CampaignSetup: React.FC<Props> = ({ setView, theme }) => {
     // Form Data
     const [selectedTemplate, setSelectedTemplate] = useState('');
     const [selectedList, setSelectedList] = useState('');
-    const [provider, setProvider] = useState<'ses' | 'mailgun' | 'mailchimp' | 'smtp'>('ses');
+    const [provider, setProvider] = useState<'ses' | 'mailgun' | 'mailchimp' | 'smtp' | 'sendgrid'>('ses');
+    
+    // Provider Specific Selections
     const [smtpProviderName, setSmtpProviderName] = useState('');
+    const [sendGridProviderName, setSendGridProviderName] = useState('');
+    const [sesProviderName, setSesProviderName] = useState('');
+    const [mailgunProviderName, setMailgunProviderName] = useState('');
+    const [mailchimpProviderName, setMailchimpProviderName] = useState('');
+
     const [rateLimit, setRateLimit] = useState('60');
     const [campaignName, setCampaignName] = useState('');
     const [fromEmail, setFromEmail] = useState('');
@@ -71,6 +82,10 @@ const CampaignSetup: React.FC<Props> = ({ setView, theme }) => {
             listPath: selectedList,
             provider,
             smtpProviderName: provider === 'smtp' ? smtpProviderName : undefined,
+            sendGridProviderName: provider === 'sendgrid' ? sendGridProviderName : undefined,
+            sesProviderName: provider === 'ses' ? sesProviderName : undefined,
+            mailgunProviderName: provider === 'mailgun' ? mailgunProviderName : undefined,
+            mailchimpProviderName: provider === 'mailchimp' ? mailchimpProviderName : undefined,
             status: 'pending',
             progress: 0,
             total: 0,
@@ -96,7 +111,7 @@ const CampaignSetup: React.FC<Props> = ({ setView, theme }) => {
         "Select Template",
         "Select List",
         "Select Provider",
-        "SMTP Provider",
+        "Provider Details",
         "From Address",
         "Campaign Name",
         "Rate Limit",
@@ -108,9 +123,6 @@ const CampaignSetup: React.FC<Props> = ({ setView, theme }) => {
             <Header theme={theme} title="Setup" compact={true} />
             <Box marginTop={1} flexDirection="column">
                 {stepLabels.map((label, index) => {
-                    // Skip SMTP Provider label if not using SMTP
-                    if (index === 3 && provider !== 'smtp') return null;
-
                     let color = theme.text;
                     let prefix = '  ';
 
@@ -193,7 +205,7 @@ const CampaignSetup: React.FC<Props> = ({ setView, theme }) => {
                     )}
                 </Box>
             ),
-            // 2: Provider
+            // 2: Provider Type
             (
                 <Box flexDirection="column">
                     <Box marginBottom={1}>
@@ -203,39 +215,65 @@ const CampaignSetup: React.FC<Props> = ({ setView, theme }) => {
                         { label: 'Amazon SES', value: 'ses' },
                         { label: 'Mailgun', value: 'mailgun' },
                         { label: 'Mailchimp', value: 'mailchimp' },
+                        { label: 'SendGrid', value: 'sendgrid' },
                         { label: 'Custom SMTP', value: 'smtp' }
                     ]} onSelect={(item: any) => {
-                        const prov = item.value as 'ses' | 'mailgun' | 'mailchimp' | 'smtp';
+                        const prov = item.value as 'ses' | 'mailgun' | 'mailchimp' | 'smtp' | 'sendgrid';
                         let isConfigured = false;
                         if (prov === 'ses') isConfigured = isSesConfigured();
                         else if (prov === 'mailgun') isConfigured = isMailgunConfigured();
                         else if (prov === 'mailchimp') isConfigured = isMailchimpConfigured();
                         else if (prov === 'smtp') isConfigured = isSmtpConfigured();
+                        else if (prov === 'sendgrid') isConfigured = isSendGridConfigured();
 
                         if (!isConfigured) {
                             setStep(9); // Error step
                             setProvider(prov);
                         } else {
                             setProvider(prov);
-                            if (prov === 'smtp') {
-                                setStep(3);
-                            } else {
-                                setStep(4);
-                            }
+                            setStep(3); // Always go to provider details selection
                         }
                     }} />
                 </Box>
             ),
-            // 3: SMTP Provider
+            // 3: Specific Provider Selection
             (
                 <Box flexDirection="column">
                     <Box marginBottom={1}>
-                        <Text color={theme.accent}>Select SMTP Provider:</Text>
+                        <Text color={theme.accent}>Select {provider.toUpperCase()} Account:</Text>
                     </Box>
-                    <SelectInput items={(getConfig<SmtpProvider[]>('smtpProviders') || []).map(p => ({ label: p.name, value: p.name }))} onSelect={(item: any) => {
-                        setSmtpProviderName(item.value);
-                        setStep(4);
-                    }} />
+                    {(() => {
+                        let items: any[] = [];
+                        let onSelect = (item: any) => {};
+
+                        if (provider === 'smtp') {
+                            items = (getConfig<SmtpProvider[]>('smtpProviders') || []).map(p => ({ label: p.name, value: p.name }));
+                            onSelect = (item) => setSmtpProviderName(item.value);
+                        } else if (provider === 'sendgrid') {
+                            items = (getConfig<SendGridProvider[]>('sendGridProviders') || []).map(p => ({ label: p.name, value: p.name }));
+                            onSelect = (item) => setSendGridProviderName(item.value);
+                        } else if (provider === 'ses') {
+                            items = (getConfig<SesProvider[]>('sesProviders') || []).map(p => ({ label: `${p.name} (${p.region})`, value: p.name }));
+                            onSelect = (item) => setSesProviderName(item.value);
+                        } else if (provider === 'mailgun') {
+                            items = (getConfig<MailgunProvider[]>('mailgunProviders') || []).map(p => ({ label: `${p.name} (${p.domain})`, value: p.name }));
+                            onSelect = (item) => setMailgunProviderName(item.value);
+                        } else if (provider === 'mailchimp') {
+                            items = (getConfig<MailchimpProvider[]>('mailchimpProviders') || []).map(p => ({ label: p.name, value: p.name }));
+                            onSelect = (item) => setMailchimpProviderName(item.value);
+                        }
+
+                        if (items.length === 0) {
+                            return <Text color="red">No providers found. Please check configuration.</Text>;
+                        }
+
+                        return (
+                            <SelectInput items={items} onSelect={(item) => {
+                                onSelect(item);
+                                setStep(4);
+                            }} />
+                        );
+                    })()}
                 </Box>
             ),
             // 4: From Email
@@ -273,7 +311,14 @@ const CampaignSetup: React.FC<Props> = ({ setView, theme }) => {
                     <Text>Name: <Text color={theme.primary}>{campaignName}</Text></Text>
                     <Text>Template: <Text color="gray">{path.basename(selectedTemplate)}</Text></Text>
                     <Text>List: <Text color="gray">{path.basename(selectedList)}</Text></Text>
-                    <Text>Provider: <Text color={theme.primary}>{provider.toUpperCase()}{provider === 'smtp' ? ` (${smtpProviderName})` : ''}</Text></Text>
+                    <Text>Provider: <Text color={theme.primary}>{provider.toUpperCase()}</Text></Text>
+                    <Text>Account: <Text color={theme.primary}>{
+                        provider === 'smtp' ? smtpProviderName :
+                        provider === 'sendgrid' ? sendGridProviderName :
+                        provider === 'ses' ? sesProviderName :
+                        provider === 'mailgun' ? mailgunProviderName :
+                        mailchimpProviderName
+                    }</Text></Text>
                     <Text>From: <Text color={theme.primary}>{fromEmail}</Text></Text>
                     <Text>Rate: <Text color={theme.primary}>{rateLimit}/min</Text></Text>
                     <Box marginTop={2}>

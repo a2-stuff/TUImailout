@@ -48,7 +48,7 @@ const DashboardLayout: React.FC<Props> = ({ children, theme, viewName }) => {
                 // Divide by timeDiff (ms)
                 // Multiply by 100 to get percentage
                 const cpuPercent = ((usageDiff.user + usageDiff.system) / 1000) / timeDiff * 100;
-                setCpuUsage(cpuPercent.toFixed(1));
+                setCpuUsage(cpuPercent.toFixed(1).padStart(5, ' '));
             }
             prevCpu.current = process.cpuUsage();
             prevTime.current = now;
@@ -120,7 +120,7 @@ const DashboardLayout: React.FC<Props> = ({ children, theme, viewName }) => {
                     <Text color={parseFloat(cpuUsage) > 50 ? theme.error : theme.text}>{cpuUsage}% </Text>
                     <Text color={theme.secondary}>| </Text>
                     <Text color={theme.secondary}>App Mem: </Text>
-                    <Text color={memUsage > 500 ? theme.error : theme.text}>{memUsage} MB </Text>
+                    <Text color={memUsage > 500 ? theme.error : theme.text}>{memUsage.toString().padStart(4, ' ')} MB </Text>
                     <Text color={theme.secondary}>| User: </Text>
                     <Text color={theme.text}>{username} </Text>
                     <Text color={theme.secondary}>| Ver: </Text>

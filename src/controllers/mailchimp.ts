@@ -1,17 +1,19 @@
 import mailchimpTx from '@mailchimp/mailchimp_transactional';
 import { getConfig } from '../utils/config.js';
+import type { MailchimpProvider } from '../views/settings/Mailchimp.js';
 
-export const sendMailchimpEmail = async (from: string, to: string[], subject: string, body: string) => {
-    const apiKey = getConfig<string>('mailchimpApiKey');
+export const sendMailchimpEmail = async (providerName: string, from: string, to: string[], subject: string, body: string) => {
+    const providers = getConfig<MailchimpProvider[]>('mailchimpProviders') || [];
+    const provider = providers.find(p => p.name === providerName);
 
-    if (!apiKey) {
-        throw new Error('Missing Mailchimp API Key in Settings.');
+    if (!provider) {
+        throw new Error(`Mailchimp Provider "${providerName}" not found.`);
     }
 
-    const client = mailchimpTx(apiKey);
+    const client = mailchimpTx(provider.apiKey);
 
     const message = {
-        html: body, // Changed from 'text' to 'html'
+        html: body,
         subject: subject,
         from_email: from,
         to: to.map(email => ({ email, type: 'to' }))
@@ -21,8 +23,6 @@ export const sendMailchimpEmail = async (from: string, to: string[], subject: st
         message
     });
 
-    // Check for rejection in response if needed, but usually it returns status
-    // Response is an array of objects for each recipient
     const status = response[0]?.status;
     if (status === 'rejected' || status === 'invalid') {
         throw new Error(`Mailchimp rejected email: ${response[0]?.reject_reason}`);
@@ -31,15 +31,13 @@ export const sendMailchimpEmail = async (from: string, to: string[], subject: st
     return response;
 };
 
-export const testMailchimpConnection = async () => {
-    const apiKey = getConfig<string>('mailchimpApiKey');
-
-    if (!apiKey) {
-        throw new Error('Missing Mailchimp API Key.');
+export const testMailchimpConnection = async (provider?: MailchimpProvider) => {
+    if (!provider) {
+        throw new Error('Provider configuration is required for testing.');
     }
 
     const { default: mailchimpTx } = await import('@mailchimp/mailchimp_transactional');
-    const client = (mailchimpTx as any)(apiKey);
+    const client = (mailchimpTx as any)(provider.apiKey);
 
     const response = await client.users.ping();
     if (response === 'PONG!') {

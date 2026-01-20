@@ -10,6 +10,7 @@ import Mailgun from './settings/Mailgun.js';
 import Mailchimp from './settings/Mailchimp.js';
 import FromEmails from './settings/FromEmails.js';
 import SmtpProviders from './settings/SmtpProviders.js';
+import SendGridProviders from './settings/SendGridProviders.js';
 
 interface Props {
     setView: (view: ViewName) => void;
@@ -56,6 +57,7 @@ const SettingsMenu: React.FC<Props> = ({ setView, theme, onThemeChange }) => {
         { label: 'Provider: Amazon SES', value: 'SES' },
         { label: 'Provider: Mailgun', value: 'MAILGUN' },
         { label: 'Provider: Mailchimp', value: 'MAILCHIMP' },
+        { label: 'Provider: SendGrid', value: 'SENDGRID' },
         { label: 'Custom SMTP Providers', value: 'SMTP' },
         { label: 'From Addresses', value: 'FROM_EMAILS' },
         { label: 'Change Theme', value: 'THEME' },
@@ -76,6 +78,8 @@ const SettingsMenu: React.FC<Props> = ({ setView, theme, onThemeChange }) => {
                 return <Mailgun {...commonProps} />;
             case 'MAILCHIMP':
                 return <Mailchimp {...commonProps} />;
+            case 'SENDGRID':
+                return <SendGridProviders {...commonProps} />;
             case 'SMTP':
                 return <SmtpProviders {...commonProps} />;
             case 'FROM_EMAILS':

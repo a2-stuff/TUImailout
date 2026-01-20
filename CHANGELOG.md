@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.3.8] - 2026-01-20
+### Added
+- **SendGrid Support:** Full integration with SendGrid API.
+  - Manage multiple SendGrid API keys via Settings.
+  - Send individual emails manually via SendGrid.
+  - Run mass campaigns using specific SendGrid accounts.
+- **Multiple Credentials Support:** Completely refactored provider management.
+  - **Amazon SES:** Support for multiple AWS accounts/credentials.
+  - **Mailgun:** Support for multiple domains and API keys.
+  - **Mailchimp:** Support for multiple Transactional API keys.
+  - **SendGrid:** Support for multiple API keys.
+- **Automatic Migration:** Legacy global configuration for SES, Mailgun, and Mailchimp is automatically migrated to the new multi-provider format on first run.
+
+### Improved
+- **Campaign Setup:** Updated wizard to include a "Provider Account" selection step, allowing you to choose exactly which credentials to use for a campaign.
+- **Worker Logic:** Background workers now accept specific provider account names to ensure the correct credentials are used during sending.
+
 ## [1.3.7] - 2026-01-19
 ### Added
 - **Dashboard Interface:** Complete UI overhaul with a professional TUI layout.

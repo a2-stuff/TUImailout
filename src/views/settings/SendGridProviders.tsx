@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Box, Text, useInput } from 'ink';
 import TextInput from 'ink-text-input';
 import SelectInput from 'ink-select-input';
@@ -12,38 +12,16 @@ interface Props {
     onDone: () => void;
 }
 
-export interface MailchimpProvider {
+export interface SendGridProvider {
     name: string;
     apiKey: string;
 }
 
-const Mailchimp: React.FC<Props> = ({ theme, isFocused, onDone }) => {
+const SendGridProviders: React.FC<Props> = ({ theme, isFocused, onDone }) => {
     const [mode, setMode] = useState<'list' | 'add' | 'edit'>('list');
 
-    // Migration & load Mailchimp providers
-    const [providers, setProviders] = useState<MailchimpProvider[]>([]);
-
-    useEffect(() => {
-        const loadedProviders = getConfig<MailchimpProvider[]>('mailchimpProviders') || [];
-        const oldKey = getConfig<string>('mailchimpApiKey');
-
-        if (oldKey) {
-            // Migrate old config to new provider list
-            const migratedProvider: MailchimpProvider = {
-                name: 'Default Mailchimp',
-                apiKey: oldKey
-            };
-            const updated = [...loadedProviders, migratedProvider];
-            setProviders(updated);
-            saveConfig('mailchimpProviders', updated);
-            
-            // Clear old config
-            saveConfig('mailchimpApiKey', '');
-            logInfo(LogCategory.SETTINGS, `Migrated legacy Mailchimp config to provider: Default Mailchimp`);
-        } else {
-            setProviders(loadedProviders);
-        }
-    }, []);
+    // Migration & load SendGrid providers
+    const [providers, setProviders] = useState<SendGridProvider[]>(getConfig<SendGridProvider[]>('sendGridProviders') || []);
 
     // Add/Edit states
     const [newName, setNewName] = useState('');
@@ -69,8 +47,8 @@ const Mailchimp: React.FC<Props> = ({ theme, isFocused, onDone }) => {
         setIsTesting(true);
         setTestStatus(null);
         try {
-            const { testMailchimpConnection } = await import('../../controllers/mailchimp.js');
-            await testMailchimpConnection({
+            const { testSendGridConnection } = await import('../../controllers/sendgrid.js');
+            await testSendGridConnection({
                 name: newName,
                 apiKey: newApiKey
             });
@@ -97,8 +75,8 @@ const Mailchimp: React.FC<Props> = ({ theme, isFocused, onDone }) => {
                 apiKey: newApiKey
             }];
             setProviders(updated);
-            saveConfig('mailchimpProviders', updated);
-            logInfo(LogCategory.SETTINGS, `Mailchimp provider added: ${newName}`);
+            saveConfig('sendGridProviders', updated);
+            logInfo(LogCategory.SETTINGS, `SendGrid provider added: ${newName}`);
             setMode('list');
             resetForm();
         }
@@ -112,8 +90,8 @@ const Mailchimp: React.FC<Props> = ({ theme, isFocused, onDone }) => {
                 apiKey: newApiKey
             };
             setProviders(updated);
-            saveConfig('mailchimpProviders', updated);
-            logInfo(LogCategory.SETTINGS, `Mailchimp provider updated: ${newName}`);
+            saveConfig('sendGridProviders', updated);
+            logInfo(LogCategory.SETTINGS, `SendGrid provider updated: ${newName}`);
             setMode('list');
             resetForm();
         }
@@ -122,8 +100,8 @@ const Mailchimp: React.FC<Props> = ({ theme, isFocused, onDone }) => {
     const handleDelete = (index: number) => {
         const updated = providers.filter((_, i) => i !== index);
         setProviders(updated);
-        saveConfig('mailchimpProviders', updated);
-        logInfo(LogCategory.SETTINGS, `Mailchimp provider deleted`);
+        saveConfig('sendGridProviders', updated);
+        logInfo(LogCategory.SETTINGS, `SendGrid provider deleted`);
     };
 
     const handleFieldSubmit = () => {
@@ -135,7 +113,7 @@ const Mailchimp: React.FC<Props> = ({ theme, isFocused, onDone }) => {
     };
 
     const menuItems = [
-        { label: '+ Add New Mailchimp Provider', value: 'ADD' },
+        { label: '+ Add New SendGrid Provider', value: 'ADD' },
         ...providers.map((provider, index) => ({
             label: `${provider.name}`,
             value: `PROVIDER_${index}`
@@ -146,13 +124,13 @@ const Mailchimp: React.FC<Props> = ({ theme, isFocused, onDone }) => {
     return (
         <Box flexDirection="column">
             <Box marginBottom={1}>
-                <Text color={theme.accent} bold>Mailchimp Providers</Text>
+                <Text color={theme.accent} bold>SendGrid Providers</Text>
             </Box>
 
             {mode === 'list' && (
                 <Box flexDirection="column">
                     <Box marginBottom={1}>
-                        <Text color="gray">Configure Mailchimp Transactional API keys</Text>
+                        <Text color="gray">Configure SendGrid API Keys for email sending</Text>
                     </Box>
 
                     <SelectInput
@@ -183,14 +161,14 @@ const Mailchimp: React.FC<Props> = ({ theme, isFocused, onDone }) => {
             {(mode === 'add' || mode === 'edit') && (
                 <Box flexDirection="column">
                     <Box marginBottom={1}>
-                        <Text color={theme.accent}>{mode === 'add' ? 'Add New Mailchimp Provider' : 'Edit Mailchimp Provider'}</Text>
+                        <Text color={theme.accent}>{mode === 'add' ? 'Add New SendGrid Provider' : 'Edit SendGrid Provider'}</Text>
                     </Box>
 
                     <Box marginBottom={1} flexDirection="column">
                         <Box>
                             <Text color={inputField === 'name' ? theme.primary : theme.text}>Provider Name: </Text>
                             {inputField === 'name' ? (
-                                <TextInput value={newName} onChange={setNewName} onSubmit={handleFieldSubmit} focus={isFocused} placeholder="My Mailchimp Account" />
+                                <TextInput value={newName} onChange={setNewName} onSubmit={handleFieldSubmit} focus={isFocused} placeholder="My SendGrid Account" />
                             ) : (
                                 <Text>{newName}</Text>
                             )}
@@ -199,7 +177,7 @@ const Mailchimp: React.FC<Props> = ({ theme, isFocused, onDone }) => {
                         <Box>
                             <Text color={inputField === 'apiKey' ? theme.primary : theme.text}>API Key: </Text>
                             {inputField === 'apiKey' ? (
-                                <TextInput value={newApiKey} onChange={setNewApiKey} onSubmit={handleFieldSubmit} focus={isFocused} placeholder="md-..." mask="*" />
+                                <TextInput value={newApiKey} onChange={setNewApiKey} onSubmit={handleFieldSubmit} focus={isFocused} placeholder="SG.xxxxxxxx..." mask="*" />
                             ) : (
                                 <Text>{'*'.repeat(Math.min(newApiKey.length, 20))}</Text>
                             )}
@@ -258,4 +236,4 @@ const Mailchimp: React.FC<Props> = ({ theme, isFocused, onDone }) => {
     );
 };
 
-export default Mailchimp;
+export default SendGridProviders;

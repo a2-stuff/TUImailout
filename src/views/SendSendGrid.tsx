@@ -4,10 +4,10 @@ import { type Theme } from '../utils/themes.js';
 import SelectInput from 'ink-select-input';
 import TextInput from 'ink-text-input';
 import Spinner from 'ink-spinner';
-import { sendMailchimpEmail } from '../controllers/mailchimp.js';
-import { isMailchimpConfigured, getConfig } from '../utils/config.js';
+import { sendSendGridEmail } from '../controllers/sendgrid.js';
+import { isSendGridConfigured, getConfig } from '../utils/config.js';
 import FromSelector from '../components/FromSelector.js';
-import type { MailchimpProvider } from './settings/Mailchimp.js';
+import { type SendGridProvider } from './settings/SendGridProviders.js';
 
 interface Props {
     theme: Theme;
@@ -15,12 +15,12 @@ interface Props {
     onDone: () => void;
 }
 
-const SendMailchimp: React.FC<Props> = ({ theme, isFocused, onDone }) => {
+const SendSendGrid: React.FC<Props> = ({ theme, isFocused, onDone }) => {
     const [step, setStep] = useState<'provider' | 'form' | 'sending' | 'result'>('provider');
     const [field, setField] = useState<'from' | 'to' | 'subject' | 'body' | 'send'>('from');
     const [selectedProvider, setSelectedProvider] = useState<string>('');
 
-    const configured = isMailchimpConfigured();
+    const configured = isSendGridConfigured();
 
     useInput((input, key) => {
         if (!isFocused) return;
@@ -33,14 +33,14 @@ const SendMailchimp: React.FC<Props> = ({ theme, isFocused, onDone }) => {
         return (
             <Box flexDirection="column">
                 <Box borderStyle="round" borderColor="red" padding={1} flexDirection="column">
-                    <Text color="red" bold>Mailchimp is not configured!</Text>
+                    <Text color="red" bold>No SendGrid providers configured!</Text>
                     <Box marginTop={1}>
-                        <Text>Please go to Settings and add at least one Mailchimp provider.</Text>
+                        <Text>Please go to Settings and add at least one SendGrid provider.</Text>
                     </Box>
                 </Box>
                 <Box marginTop={1}>
                     <SelectInput
-                        items={[{ label: 'Back', value: 'back' }]}
+                        items={[{ label: '(Q) Back', value: 'back' }]}
                         isFocused={isFocused}
                         onSelect={() => onDone()}
                     />
@@ -50,7 +50,7 @@ const SendMailchimp: React.FC<Props> = ({ theme, isFocused, onDone }) => {
     }
 
     const [from, setFrom] = useState('');
-    const [to, setTo] = useState('');
+    const [to, setTo] = useState(''); // Comma separated
     const [subject, setSubject] = useState('');
     const [body, setBody] = useState('');
     const [status, setStatus] = useState('');
@@ -60,7 +60,7 @@ const SendMailchimp: React.FC<Props> = ({ theme, isFocused, onDone }) => {
         const recipients = to.split(',').map(e => e.trim());
 
         try {
-            await sendMailchimpEmail(selectedProvider, from, recipients, subject, body);
+            await sendSendGridEmail(selectedProvider, from, recipients, subject, body);
             setStatus('Email sent successfully!');
         } catch (error: any) {
             setStatus(`Error: ${error.message}`);
@@ -75,18 +75,18 @@ const SendMailchimp: React.FC<Props> = ({ theme, isFocused, onDone }) => {
         else if (field === 'body') setField('send');
     };
 
-    const providers = getConfig<MailchimpProvider[]>('mailchimpProviders') || [];
+    const providers = getConfig<SendGridProvider[]>('sendGridProviders') || [];
 
     return (
         <Box flexDirection="column">
             <Box marginBottom={1}>
-                <Text color={theme.primary} bold>Send via Mailchimp</Text>
+                <Text color={theme.primary} bold>Send via SendGrid</Text>
             </Box>
 
             {step === 'provider' && (
                 <Box flexDirection="column">
                     <Box marginBottom={1}>
-                        <Text color={theme.accent}>Select Mailchimp Provider:</Text>
+                        <Text color={theme.accent}>Select SendGrid Provider:</Text>
                     </Box>
                     <SelectInput
                         items={providers.map(p => ({ label: p.name, value: p.name }))}
@@ -102,7 +102,7 @@ const SendMailchimp: React.FC<Props> = ({ theme, isFocused, onDone }) => {
             {step === 'form' && (
                 <Box flexDirection="column">
                     <Box marginBottom={1}>
-                        <Text color="gray" italic>Press [ESC] to return to menu</Text>
+                        <Text color="gray" italic>Press [ESC/Q] to return to menu</Text>
                         <Text color="gray">Using Provider: <Text color={theme.accent}>{selectedProvider}</Text></Text>
                     </Box>
 
@@ -178,4 +178,4 @@ const SendMailchimp: React.FC<Props> = ({ theme, isFocused, onDone }) => {
     );
 };
 
-export default SendMailchimp;
+export default SendSendGrid;

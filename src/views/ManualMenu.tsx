@@ -8,6 +8,7 @@ import SendSES from './SendSES.js';
 import SendMailgun from './SendMailgun.js';
 import SendMailchimp from './SendMailchimp.js';
 import SendSmtp from './SendSmtp.js';
+import SendSendGrid from './SendSendGrid.js';
 
 interface Props {
     setView: (view: ViewName) => void;
@@ -48,6 +49,7 @@ const ManualMenu: React.FC<Props> = ({ setView, theme }) => {
         { label: 'Send via Amazon SES', value: 'SES' },
         { label: 'Send via Mailgun', value: 'MAILGUN' },
         { label: 'Send via Mailchimp', value: 'MAILCHIMP' },
+        { label: 'Send via SendGrid', value: 'SENDGRID' },
         { label: 'Send via Custom SMTP', value: 'SMTP' },
         { label: '(Q) Back to Home', value: 'HOME' },
     ];
@@ -66,6 +68,8 @@ const ManualMenu: React.FC<Props> = ({ setView, theme }) => {
                 return <SendMailgun {...commonProps} />;
             case 'MAILCHIMP':
                 return <SendMailchimp {...commonProps} />;
+            case 'SENDGRID':
+                return <SendSendGrid {...commonProps} />;
             case 'SMTP':
                 return <SendSmtp {...commonProps} />;
             case 'HOME':

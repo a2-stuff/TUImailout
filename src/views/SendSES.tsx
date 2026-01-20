@@ -1,14 +1,13 @@
 import React, { useState } from 'react';
 import { Box, Text, useInput } from 'ink';
-import { ViewName } from '../types.js';
 import { type Theme } from '../utils/themes.js';
-import Header from '../components/Header.js';
 import SelectInput from 'ink-select-input';
 import TextInput from 'ink-text-input';
 import Spinner from 'ink-spinner';
 import { sendSesEmail } from '../controllers/ses.js';
-import { isSesConfigured } from '../utils/config.js';
+import { isSesConfigured, getConfig } from '../utils/config.js';
 import FromSelector from '../components/FromSelector.js';
+import type { SesProvider } from './settings/AmazonSES.js';
 
 interface Props {
     theme: Theme;
@@ -17,8 +16,9 @@ interface Props {
 }
 
 const SendSES: React.FC<Props> = ({ theme, isFocused, onDone }) => {
-    const [step, setStep] = useState<'form' | 'sending' | 'result'>('form');
+    const [step, setStep] = useState<'provider' | 'form' | 'sending' | 'result'>('provider');
     const [field, setField] = useState<'from' | 'to' | 'subject' | 'body' | 'send'>('from');
+    const [selectedProvider, setSelectedProvider] = useState<string>('');
 
     const configured = isSesConfigured();
 
@@ -35,7 +35,7 @@ const SendSES: React.FC<Props> = ({ theme, isFocused, onDone }) => {
                 <Box borderStyle="round" borderColor="red" padding={1} flexDirection="column">
                     <Text color="red" bold>Amazon SES is not configured!</Text>
                     <Box marginTop={1}>
-                        <Text>Please go to Settings and enter your AWS Access Key, Secret Key, and Region.</Text>
+                        <Text>Please go to Settings and add at least one SES provider.</Text>
                     </Box>
                 </Box>
                 <Box marginTop={1}>
@@ -50,7 +50,7 @@ const SendSES: React.FC<Props> = ({ theme, isFocused, onDone }) => {
     }
 
     const [from, setFrom] = useState('');
-    const [to, setTo] = useState(''); // Comma separated
+    const [to, setTo] = useState('');
     const [subject, setSubject] = useState('');
     const [body, setBody] = useState('');
     const [status, setStatus] = useState('');
@@ -60,7 +60,7 @@ const SendSES: React.FC<Props> = ({ theme, isFocused, onDone }) => {
         const recipients = to.split(',').map(e => e.trim());
 
         try {
-            await sendSesEmail(from, recipients, subject, body);
+            await sendSesEmail(selectedProvider, from, recipients, subject, body);
             setStatus('Email sent successfully!');
         } catch (error: any) {
             setStatus(`Error: ${error.message}`);
@@ -75,16 +75,35 @@ const SendSES: React.FC<Props> = ({ theme, isFocused, onDone }) => {
         else if (field === 'body') setField('send');
     };
 
+    const providers = getConfig<SesProvider[]>('sesProviders') || [];
+
     return (
         <Box flexDirection="column">
             <Box marginBottom={1}>
                 <Text color={theme.primary} bold>Send via Amazon SES</Text>
             </Box>
 
+            {step === 'provider' && (
+                <Box flexDirection="column">
+                    <Box marginBottom={1}>
+                        <Text color={theme.accent}>Select SES Provider:</Text>
+                    </Box>
+                    <SelectInput
+                        items={providers.map(p => ({ label: `${p.name} (${p.region})`, value: p.name }))}
+                        isFocused={isFocused}
+                        onSelect={(item) => {
+                            setSelectedProvider(item.value);
+                            setStep('form');
+                        }}
+                    />
+                </Box>
+            )}
+
             {step === 'form' && (
                 <Box flexDirection="column">
                     <Box marginBottom={1}>
                         <Text color="gray" italic>Press [ESC] to return to menu</Text>
+                        <Text color="gray">Using Provider: <Text color={theme.accent}>{selectedProvider}</Text></Text>
                     </Box>
 
                     {field === 'from' ? (

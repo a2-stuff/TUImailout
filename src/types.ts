@@ -16,8 +16,12 @@ export interface Campaign {
     name: string;
     templatePath: string;
     listPath: string;
-    provider: 'ses' | 'mailgun' | 'mailchimp' | 'smtp';
+    provider: 'ses' | 'mailgun' | 'mailchimp' | 'smtp' | 'sendgrid';
     smtpProviderName?: string;
+    sendGridProviderName?: string;
+    sesProviderName?: string;
+    mailgunProviderName?: string;
+    mailchimpProviderName?: string;
     status: 'pending' | 'running' | 'completed' | 'failed' | 'stopped' | 'cancelled';
     progress: number;
     total: number;

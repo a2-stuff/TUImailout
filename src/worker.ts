@@ -3,11 +3,16 @@ import { sendSesEmail, testSesConnection } from './controllers/ses.js';
 import { sendMailgunEmail, testMailgunConnection } from './controllers/mailgun.js';
 import { sendMailchimpEmail, testMailchimpConnection } from './controllers/mailchimp.js';
 import { sendSmtpEmail, testSmtpConnection } from './controllers/smtp.js';
+import { sendSendGridEmail, testSendGridConnection } from './controllers/sendgrid.js';
 import { getCampaign, saveCampaign } from './utils/campaigns.js';
 import { getConfig } from './utils/config.js';
 import { parse } from 'csv-parse/sync';
 import { logInfo, logSuccess, logError, LogCategory } from './utils/logger.js';
 import type { SmtpProvider } from './views/settings/SmtpProviders.js';
+import type { SendGridProvider } from './views/settings/SendGridProviders.js';
+import type { SesProvider } from './views/settings/AmazonSES.js';
+import type { MailgunProvider } from './views/settings/Mailgun.js';
+import type { MailchimpProvider } from './views/settings/Mailchimp.js';
 
 const campaignId = process.argv[2];
 
@@ -55,15 +60,13 @@ const run = async () => {
                 relax_column_count: true
             });
 
-            // Post-processing to clean values (csv-parse handles double quotes, but not single quotes by default)
+            // Post-processing to clean values
             records = records.map(record => {
                 const newRecord: any = {};
                 Object.keys(record).forEach(key => {
                     let val = record[key];
                     if (typeof val === 'string') {
-                        // Remove surrounding single quotes
                         val = val.replace(/^'|'$/g, '');
-                        // Remove surrounding double quotes (just in case)
                         val = val.replace(/^"|"$/g, '');
                     }
                     newRecord[key] = val;
@@ -89,18 +92,30 @@ const run = async () => {
         logInfo(LogCategory.CAMPAIGN, `Validating provider connection: ${campaign.provider}`, { campaignId });
         try {
             if (campaign.provider === 'ses') {
-                await testSesConnection();
+                const providers = getConfig<SesProvider[]>('sesProviders') || [];
+                const provider = providers.find(p => p.name === campaign.sesProviderName);
+                if (!provider) throw new Error(`SES Provider "${campaign.sesProviderName}" not found`);
+                await testSesConnection(provider);
             } else if (campaign.provider === 'mailgun') {
-                await testMailgunConnection();
+                const providers = getConfig<MailgunProvider[]>('mailgunProviders') || [];
+                const provider = providers.find(p => p.name === campaign.mailgunProviderName);
+                if (!provider) throw new Error(`Mailgun Provider "${campaign.mailgunProviderName}" not found`);
+                await testMailgunConnection(provider);
             } else if (campaign.provider === 'mailchimp') {
-                await testMailchimpConnection();
+                const providers = getConfig<MailchimpProvider[]>('mailchimpProviders') || [];
+                const provider = providers.find(p => p.name === campaign.mailchimpProviderName);
+                if (!provider) throw new Error(`Mailchimp Provider "${campaign.mailchimpProviderName}" not found`);
+                await testMailchimpConnection(provider);
             } else if (campaign.provider === 'smtp') {
                 const providers = getConfig<SmtpProvider[]>('smtpProviders') || [];
                 const provider = providers.find(p => p.name === campaign.smtpProviderName);
-                if (!provider) {
-                    throw new Error(`SMTP Provider "${campaign.smtpProviderName}" not found in configuration`);
-                }
+                if (!provider) throw new Error(`SMTP Provider "${campaign.smtpProviderName}" not found`);
                 await testSmtpConnection(provider);
+            } else if (campaign.provider === 'sendgrid') {
+                const providers = getConfig<SendGridProvider[]>('sendGridProviders') || [];
+                const provider = providers.find(p => p.name === campaign.sendGridProviderName);
+                if (!provider) throw new Error(`SendGrid Provider "${campaign.sendGridProviderName}" not found`);
+                await testSendGridConnection(provider);
             }
             logInfo(LogCategory.CAMPAIGN, `Provider connection validated`, { campaignId });
         } catch (connError: any) {
@@ -127,14 +142,12 @@ const run = async () => {
             const windowStartTime = Date.now();
             logInfo(LogCategory.CAMPAIGN, `Starting new 5-minute window for bursty sending`, { campaignId, windowStartTime });
 
-            // Pick 2 random timestamps within the window (leaving 1 min margin at the end for final burst processing)
             const marginMs = 60 * 1000;
             const t1 = Math.floor(Math.random() * (windowDurationMs - marginMs));
             const t2 = Math.floor(Math.random() * (windowDurationMs - marginMs));
             const burstDelays = [t1, t2].sort((a, b) => a - b);
 
             for (const delay of burstDelays) {
-                // Reload campaign to check for status changes
                 const currentCampaign = getCampaign(campaignId);
                 if (!currentCampaign || ['cancelled', 'completed', 'failed'].includes(currentCampaign.status)) {
                     logInfo(LogCategory.CAMPAIGN, `Campaign stopped externally (status: ${currentCampaign?.status}). Stopping worker.`, { campaignId });
@@ -151,7 +164,6 @@ const run = async () => {
                     await new Promise(resolve => setTimeout(resolve, currentWait));
                 }
 
-                // Check again after wait
                 const afterWaitCampaign = getCampaign(campaignId);
                 if (!afterWaitCampaign || ['cancelled', 'completed', 'failed'].includes(afterWaitCampaign.status)) {
                     logInfo(LogCategory.CAMPAIGN, `Campaign stopped externally during wait (status: ${afterWaitCampaign?.status}). Stopping worker.`, { campaignId });
@@ -162,7 +174,6 @@ const run = async () => {
 
                 for (let b = 0; b < burstSize && sentCount < records.length; b++) {
                     const record = records[sentCount];
-                    // Find email key case-insensitively
                     const emailKey = Object.keys(record).find(k => k.toLowerCase() === 'email');
                     const email = emailKey ? record[emailKey] : null;
 
@@ -173,7 +184,6 @@ const run = async () => {
                         continue;
                     }
 
-                    // Simple personalization (replace {{name}})
                     let body = templateContent;
                     Object.keys(record).forEach((key: string) => {
                         body = body.replace(new RegExp(`{{${key}}}`, 'g'), record[key]);
@@ -181,13 +191,15 @@ const run = async () => {
 
                     try {
                         if (campaign.provider === 'ses') {
-                            await sendSesEmail(campaign.from, [email], campaign.name, body);
+                            await sendSesEmail(campaign.sesProviderName!, campaign.from, [email], campaign.name, body);
                         } else if (campaign.provider === 'mailgun') {
-                            await sendMailgunEmail(campaign.from, [email], campaign.name, body);
+                            await sendMailgunEmail(campaign.mailgunProviderName!, campaign.from, [email], campaign.name, body);
                         } else if (campaign.provider === 'mailchimp') {
-                            await sendMailchimpEmail(campaign.from, [email], campaign.name, body);
+                            await sendMailchimpEmail(campaign.mailchimpProviderName!, campaign.from, [email], campaign.name, body);
                         } else if (campaign.provider === 'smtp') {
                             await sendSmtpEmail(campaign.smtpProviderName!, campaign.from, [email], campaign.name, body);
+                        } else if (campaign.provider === 'sendgrid') {
+                            await sendSendGridEmail(campaign.sendGridProviderName!, campaign.from, [email], campaign.name, body);
                         }
                         logInfo(LogCategory.EMAIL, `Sent to ${email}`, {
                             campaign: campaign.name,
@@ -208,12 +220,10 @@ const run = async () => {
                     campaign.progress = sentCount;
                     saveCampaign(campaign, false);
 
-                    // Small 200ms pause between emails in a burst to be safe
                     await new Promise(resolve => setTimeout(resolve, 200));
                 }
             }
 
-            // After bursts, wait for the remainder of the 5-minute window before starting next cycle
             if (sentCount < records.length) {
                 const timeLeftInWindow = (windowStartTime + windowDurationMs) - Date.now();
                 if (timeLeftInWindow > 0) {

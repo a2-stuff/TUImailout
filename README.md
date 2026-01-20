@@ -1,12 +1,16 @@
-
-
 ![TUImailout](src/assets/TUImailout.gif)
 
-A powerful, interactive Terminal User Interface (TUI) application for sending mass emails using Amazon SES, Mailgun, and Mailchimp Transactional. Built with Node.js, React (Ink), and TypeScript.
+A powerful, interactive Terminal User Interface (TUI) application for sending mass emails using multiple providers including Amazon SES, Mailgun, Mailchimp Transactional, SendGrid, and Custom SMTP. Built with Node.js, React (Ink), and TypeScript.
 
 ## Features
 
-*   **Multi-Provider Support:** Send seamlessly via Amazon SES, Mailgun, Mailchimp Transactional, or any **Custom SMTP Provider**.
+*   **Multi-Provider Support:** Send seamlessly via:
+    *   **Amazon SES**
+    *   **Mailgun**
+    *   **Mailchimp Transactional**
+    *   **SendGrid**
+    *   **Custom SMTP Providers**
+*   **Multiple Credentials:** Manage multiple accounts for each provider (e.g., "Personal SES", "Work SES", "Client Mailgun"). Easily switch between accounts for different campaigns.
 *   **Mass Campaigns:**
     *   Load HTML templates from local folders (includes standard HTML boilerplate).
     *   Load recipient lists from CSV files.
@@ -41,7 +45,7 @@ A powerful, interactive Terminal User Interface (TUI) application for sending ma
     *   Shortcut Hints: `(Q)` and `ESC` shortcuts clearly labeled for quick navigation.
     *   Number key shortcuts (1-9) for lightning-fast menu navigation.
     *   Menu-driven interface with intuitive keyboard controls.
-*   **Manual Sending:** Send individual quick emails via any configured provider, including custom SMTP.
+*   **Manual Sending:** Send individual quick emails via any configured provider.
 
 ## Installation
 
@@ -70,16 +74,18 @@ npm start
 ```
 
 ### Configuration
-On first run, navigate to **Settings** to configure your credentials:
-*   **Amazon SES:** Settings -> Provider: Amazon SES
-*   **Mailgun:** Settings -> Provider: Mailgun
-*   **Mailchimp:** Settings -> Provider: Mailchimp
+On first run, navigate to **Settings** to configure your credentials. You can add multiple accounts for each provider:
+*   **Amazon SES:** Settings -> Amazon SES Providers
+*   **Mailgun:** Settings -> Mailgun Providers
+*   **Mailchimp:** Settings -> Mailchimp Providers
+*   **SendGrid:** Settings -> SendGrid Providers
+*   **SMTP:** Settings -> Custom SMTP Providers
 
 ### Sending a Campaign
 1.  Place HTML templates in the `templates/` folder (e.g., `templates/newsletter/index.html`).
 2.  Place CSV recipient lists in the `lists/` folder (header: `email,name`).
 3.  Select **Start Mass Campaign** from the main menu.
-4.  Follow the wizard to select your template, list, and provider.
+4.  Follow the wizard to select your template, list, provider, and specific account.
 
 ### Managing Lists
 1.  Select **Lists Manager** from the main menu (or press `4`).

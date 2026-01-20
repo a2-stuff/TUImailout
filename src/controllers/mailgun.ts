@@ -1,42 +1,38 @@
 import Mailgun from 'mailgun.js';
 import FormData from 'form-data';
 import { getConfig } from '../utils/config.js';
+import type { MailgunProvider } from '../views/settings/Mailgun.js';
 
-export const sendMailgunEmail = async (from: string, to: string[], subject: string, body: string) => {
-    const apiKey = getConfig<string>('mailgunApiKey');
-    const domain = getConfig<string>('mailgunDomain');
-    const username = getConfig<string>('mailgunUsername') || 'api';
+export const sendMailgunEmail = async (providerName: string, from: string, to: string[], subject: string, body: string) => {
+    const providers = getConfig<MailgunProvider[]>('mailgunProviders') || [];
+    const provider = providers.find(p => p.name === providerName);
 
-    if (!apiKey || !domain) {
-        throw new Error('Missing Mailgun Credentials in Settings.');
+    if (!provider) {
+        throw new Error(`Mailgun Provider "${providerName}" not found.`);
     }
 
     const mailgun = new Mailgun(FormData);
-    const mg = mailgun.client({ username, key: apiKey });
+    const mg = mailgun.client({ username: provider.username, key: provider.apiKey });
 
     // Send as HTML email
-    return await mg.messages.create(domain, {
+    return await mg.messages.create(provider.domain, {
         from,
         to: to,
         subject,
-        html: body // Changed from 'text' to 'html'
+        html: body
     });
 };
 
-export const testMailgunConnection = async () => {
-    const apiKey = getConfig<string>('mailgunApiKey');
-    const domain = getConfig<string>('mailgunDomain');
-    const username = getConfig<string>('mailgunUsername') || 'api';
-
-    if (!apiKey || !domain) {
-        throw new Error('Missing Mailgun Credentials.');
+export const testMailgunConnection = async (provider?: MailgunProvider) => {
+    if (!provider) {
+        throw new Error('Provider configuration is required for testing.');
     }
 
     const { default: Mailgun } = await import('mailgun.js');
     const { default: FormData } = await import('form-data');
     const mailgun = new Mailgun(FormData as any);
-    const mg = mailgun.client({ username, key: apiKey });
+    const mg = mailgun.client({ username: provider.username, key: provider.apiKey });
 
-    await mg.domains.get(domain);
+    await mg.domains.get(provider.domain);
     return true;
 };
