@@ -6,7 +6,7 @@ import path from 'path';
 import { type Theme } from '../utils/themes.js';
 import { APP_VERSION } from '../utils/version.js';
 import { getCampaigns } from '../utils/campaigns.js';
-import { getConfig } from '../utils/config.js';
+import { getConfig, isSesConfigured, isMailgunConfigured, isMailchimpConfigured } from '../utils/config.js';
 import { type SmtpProvider } from '../views/settings/SmtpProviders.js';
 
 interface Props {
@@ -77,8 +77,11 @@ const DashboardLayout: React.FC<Props> = ({ children, theme, viewName }) => {
                     : 0;
 
                 // Providers
+                const sesCount = isSesConfigured() ? 1 : 0;
+                const mailgunCount = isMailgunConfigured() ? 1 : 0;
+                const mailchimpCount = isMailchimpConfigured() ? 1 : 0;
                 const smtpProviders = getConfig<SmtpProvider[]>('smtpProviders') || [];
-                const providerCount = 3 + smtpProviders.length;
+                const providerCount = sesCount + mailgunCount + mailchimpCount + smtpProviders.length;
 
                 setResourceStats({ lists: listsCount, templates: tplCount, providers: providerCount });
 

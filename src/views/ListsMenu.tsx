@@ -560,9 +560,9 @@ const ListsMenu: React.FC<Props> = ({ setView, theme }) => {
         <Box flexDirection="column" height="100%">
             <Header theme={theme} title="Lists Manager" />
 
-            <Box flexDirection="row" flexGrow={1}>
+            <Box flexDirection="row">
                 {/* Left Pane: List of CSV files */}
-                <Box width="30%" height="100%" flexDirection="column" padding={1} borderRightColor={theme.secondary} borderStyle="single">
+                <Box width="30%" height={30} flexDirection="column" padding={1} borderRightColor={theme.secondary} borderStyle="single">
                     <Header theme={theme} title="CSV Lists" compact={true} />
                     <Box marginTop={1} flexDirection="column">
                         <SelectInput
@@ -637,7 +637,7 @@ const ListsMenu: React.FC<Props> = ({ setView, theme }) => {
                 </Box>
 
                 {/* Right Pane: File details and actions */}
-                <Box width="70%" height="100%" padding={2} flexDirection="column" borderStyle="single" borderColor={theme.secondary}>
+                <Box width="70%" height={30} padding={2} flexDirection="column" borderStyle="single" borderColor={theme.secondary}>
                     {mainRenderContent()}
                 </Box>
             </Box>

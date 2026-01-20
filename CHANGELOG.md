@@ -12,6 +12,8 @@ All notable changes to this project will be documented in this file.
    - **Quick Actions:** Added `Backspace`/`Delete` shortcut in List Editor to delete lines instantly.
    - **Editor UX:** Added `ESC` support to cancel line editing and revert changes, preventing stuck states.
    - **Focus Management:** Fixed UI conflict where navigation arrows would incorrectly trigger the "Save/Cancel" menu. The menu is now separate and accessible via `TAB`.
+   - **Stability:** Fixed UI flickering in Lists Manager by enforcing static layout dimensions, preventing unnecessary re-calculations.
+   - **Dashboard Logic:** Updated "Providers" count to reflect only *active* credentials (SES, Mailgun, Mailchimp, SMTP) instead of generic options.
 - **Real-time Monitoring:** Added live monitoring for CPU and RAM usage specific to the application process.
 
 ### Improved
