@@ -22,6 +22,17 @@ export const themes: Record<string, Theme> = {
         warning: '#e0af68', // Soft Orange
         error: '#f7768e', // Soft Red
     },
+    midnight: {
+        name: 'Midnight Run',
+        primary: '#C792EA', // Light Purple
+        secondary: '#292D3E', // Dark Blue
+        accent: '#82AAFF', // Soft Blue
+        text: '#EEFFFF', // White
+        background: '#0F111A', // Very Dark Blue
+        success: '#C3E88D', // Soft Green
+        warning: '#FFCB6B', // Soft Yellow
+        error: '#FF5370', // Soft Red
+    },
     neon: {
         name: 'Neon Nights',
         primary: '#39FF14',
@@ -77,6 +88,39 @@ export const themes: Record<string, Theme> = {
         warning: '#FFFF00',
         error: '#FF0000',
     },
+    solar: {
+        name: 'Solar Flare',
+        primary: '#FF4500', // Orange Red
+        secondary: '#8B0000', // Dark Red
+        accent: '#FFD700', // Gold
+        text: '#FFF5EE', // Seashell
+        background: '#1a0500', // Dark Red/Black
+        success: '#32CD32',
+        warning: '#FFA500',
+        error: '#FF0000',
+    },
+    ocean: {
+        name: 'Deep Ocean',
+        primary: '#00FFFF', // Cyan
+        secondary: '#008B8B', // Dark Cyan
+        accent: '#7FFFD4', // Aquamarine
+        text: '#E0FFFF', // Light Cyan
+        background: '#001f1f', // Very Dark Teal
+        success: '#00FA9A',
+        warning: '#FFFFE0',
+        error: '#FF6347',
+    },
+    volcano: {
+        name: 'Obsidian Magma',
+        primary: '#FF5733', // Red/Orange
+        secondary: '#4D4D4D', // Grey
+        accent: '#C70039', // Dark Red
+        text: '#D3D3D3', // Light Grey
+        background: '#1C1C1C', // Almost Black
+        success: '#28B463',
+        warning: '#FFC300',
+        error: '#900C3F',
+    }
 };
 
 export const getTheme = (name: string): Theme => {

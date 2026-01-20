@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Text, useInput } from 'ink';
+import BigText from 'ink-big-text';
 import { ViewName, type Campaign } from '../types.js';
 import { type Theme } from '../utils/themes.js';
 import Header from '../components/Header.js';
@@ -87,7 +88,7 @@ const CampaignMonitor: React.FC<Props> = ({ setView, theme }) => {
 
     const handleReschedule = (timeString: string) => {
         if (!selectedCampaign) return;
-        
+
         let newStartTime = Date.now();
         if (timeString.includes(':') || timeString.includes('-')) {
             const parsed = Date.parse(timeString);
@@ -101,10 +102,10 @@ const CampaignMonitor: React.FC<Props> = ({ setView, theme }) => {
         // If it was cancelled or failed, we might want to reset progress? 
         // For now, assume rescheduling implies waiting to start/resume.
         if (updated.status === 'scheduled' && newStartTime <= Date.now()) {
-             // TS fix: cast to correct union type
-             (updated as any).status = 'pending'; 
+            // TS fix: cast to correct union type
+            (updated as any).status = 'pending';
         }
-        
+
         saveCampaign(updated, false);
         logInfo(LogCategory.CAMPAIGN, `Campaign rescheduled: ${selectedCampaign.name} to ${new Date(newStartTime).toLocaleString()}`, {
             campaignId: selectedCampaign.id
@@ -171,11 +172,16 @@ const CampaignMonitor: React.FC<Props> = ({ setView, theme }) => {
         menuItems.push({ label: 'No active campaigns', value: 'NONE' });
     }
 
+    menuItems.push({ label: '+ Create New Campaign', value: 'CREATE' });
     menuItems.push({ label: '(Q) Back to Home', value: 'HOME' });
 
     return (
         <Box flexDirection="column" height="100%">
-            <Header theme={theme} title="Campaign Monitor" />
+            <Box flexDirection="column" alignItems="center" marginBottom={1}>
+                <BigText text="CAMPAIGN MONITOR" font="tiny" colors={[theme.primary, theme.secondary, theme.accent]} />
+                <Box marginBottom={1} />
+                <Box borderStyle="single" borderColor={theme.primary} width="100%" />
+            </Box>
 
             <Box flexDirection="row" flexGrow={1}>
                 {/* Left Pane: Campaign List */}
@@ -188,12 +194,14 @@ const CampaignMonitor: React.FC<Props> = ({ setView, theme }) => {
                             onSelect={(item) => {
                                 if (item.value === 'HOME') {
                                     setView(ViewName.HOME);
+                                } else if (item.value === 'CREATE') {
+                                    setView(ViewName.CAMPAIGN_SETUP);
                                 } else if (item.value !== 'NONE') {
                                     setSelectedId(item.value);
                                 }
                             }}
                             onHighlight={(item) => {
-                                if (item.value !== 'HOME' && item.value !== 'NONE') {
+                                if (item.value !== 'HOME' && item.value !== 'NONE' && item.value !== 'CREATE') {
                                     setSelectedId(item.value);
                                 }
                             }}
@@ -274,7 +282,7 @@ const CampaignMonitor: React.FC<Props> = ({ setView, theme }) => {
                                         <Box borderStyle="single" borderColor={theme.accent} padding={1} flexDirection="column">
                                             <Text color={theme.accent} bold>Reschedule Campaign:</Text>
                                             <Box marginTop={1}>
-                                                <ScheduledTimeInput 
+                                                <ScheduledTimeInput
                                                     theme={theme}
                                                     onSelect={handleReschedule}
                                                     onCancel={() => setEditMode('none')}
@@ -286,7 +294,7 @@ const CampaignMonitor: React.FC<Props> = ({ setView, theme }) => {
                                     {editMode === 'rate' && (
                                         <Box borderStyle="single" borderColor={theme.accent} padding={1} flexDirection="column">
                                             <Text color={theme.accent} bold>New Speed Limit (emails/min):</Text>
-                                            <TextInput 
+                                            <TextInput
                                                 value={tempRateLimit}
                                                 onChange={setTempRateLimit}
                                                 onSubmit={handleRateLimitUpdate}
@@ -325,11 +333,11 @@ const CampaignMonitor: React.FC<Props> = ({ setView, theme }) => {
                                                     <Text color={theme.primary}> {selectedCampaign.total}</Text> recipients
                                                 </Text>
                                                 <Text>
-                                                    Rejected: <Text color={theme.error}>{selectedCampaign.rejected || 0}</Text> / 
+                                                    Rejected: <Text color={theme.error}>{selectedCampaign.rejected || 0}</Text> /
                                                     <Text color={theme.secondary}> {selectedCampaign.progress}</Text> <Text color="gray" dimColor>(API Only)</Text>
                                                 </Text>
                                                 <Text>
-                                                    Opened: <Text color={theme.success}>{selectedCampaign.opened || 0}</Text> / 
+                                                    Opened: <Text color={theme.success}>{selectedCampaign.opened || 0}</Text> /
                                                     <Text color={theme.secondary}> {selectedCampaign.progress}</Text> <Text color="gray" dimColor>(API Only)</Text>
                                                 </Text>
                                                 <Box marginTop={1}>

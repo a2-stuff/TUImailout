@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Text, useInput } from 'ink';
+import BigText from 'ink-big-text';
 import { ViewName, type Campaign } from '../types.js';
 import { type Theme } from '../utils/themes.js';
 import Header from '../components/Header.js';
@@ -39,7 +40,7 @@ const CampaignSetup: React.FC<Props> = ({ setView, theme }) => {
     const [selectedTemplate, setSelectedTemplate] = useState('');
     const [selectedList, setSelectedList] = useState('');
     const [provider, setProvider] = useState<'ses' | 'mailgun' | 'mailchimp' | 'smtp' | 'sendgrid'>('ses');
-    
+
     // Provider Specific Selections
     const [smtpProviderName, setSmtpProviderName] = useState('');
     const [sendGridProviderName, setSendGridProviderName] = useState('');
@@ -141,20 +142,20 @@ const CampaignSetup: React.FC<Props> = ({ setView, theme }) => {
         let count = 0;
         let period = 0;
         if (provider === 'smtp') {
-             const p = (getConfig<SmtpProvider[]>('smtpProviders') || []).find(p => p.name === smtpProviderName);
-             if (p) { count = p.rateLimitCount; period = p.rateLimitPeriod; }
+            const p = (getConfig<SmtpProvider[]>('smtpProviders') || []).find(p => p.name === smtpProviderName);
+            if (p) { count = p.rateLimitCount; period = p.rateLimitPeriod; }
         } else if (provider === 'ses') {
-             const p = (getConfig<SesProvider[]>('sesProviders') || []).find(p => p.name === sesProviderName);
-             if (p) { count = p.rateLimitCount; period = p.rateLimitPeriod; }
+            const p = (getConfig<SesProvider[]>('sesProviders') || []).find(p => p.name === sesProviderName);
+            if (p) { count = p.rateLimitCount; period = p.rateLimitPeriod; }
         } else if (provider === 'mailgun') {
-             const p = (getConfig<MailgunProvider[]>('mailgunProviders') || []).find(p => p.name === mailgunProviderName);
-             if (p) { count = p.rateLimitCount; period = p.rateLimitPeriod; }
+            const p = (getConfig<MailgunProvider[]>('mailgunProviders') || []).find(p => p.name === mailgunProviderName);
+            if (p) { count = p.rateLimitCount; period = p.rateLimitPeriod; }
         } else if (provider === 'mailchimp') {
-             const p = (getConfig<MailchimpProvider[]>('mailchimpProviders') || []).find(p => p.name === mailchimpProviderName);
-             if (p) { count = p.rateLimitCount; period = p.rateLimitPeriod; }
+            const p = (getConfig<MailchimpProvider[]>('mailchimpProviders') || []).find(p => p.name === mailchimpProviderName);
+            if (p) { count = p.rateLimitCount; period = p.rateLimitPeriod; }
         } else if (provider === 'sendgrid') {
-             const p = (getConfig<SendGridProvider[]>('sendGridProviders') || []).find(p => p.name === sendGridProviderName);
-             if (p) { count = p.rateLimitCount; period = p.rateLimitPeriod; }
+            const p = (getConfig<SendGridProvider[]>('sendGridProviders') || []).find(p => p.name === sendGridProviderName);
+            if (p) { count = p.rateLimitCount; period = p.rateLimitPeriod; }
         }
         return `${count} emails / ${period} hrs`;
     }
@@ -303,7 +304,7 @@ const CampaignSetup: React.FC<Props> = ({ setView, theme }) => {
                     </Box>
                     {(() => {
                         let items: any[] = [];
-                        let onSelect = (item: any) => {};
+                        let onSelect = (item: any) => { };
 
                         if (provider === 'smtp') {
                             items = (getConfig<SmtpProvider[]>('smtpProviders') || []).map(p => ({ label: p.name, value: p.name }));
@@ -348,13 +349,13 @@ const CampaignSetup: React.FC<Props> = ({ setView, theme }) => {
                     <Box marginBottom={1}>
                         <Text color={theme.accent}>Select Sender Address:</Text>
                     </Box>
-                    <FromSelector 
-                        theme={theme} 
-                        isFocused={true} 
+                    <FromSelector
+                        theme={theme}
+                        isFocused={true}
                         onSelect={(email) => {
                             setFromEmail(email);
                             setStep(5);
-                        }} 
+                        }}
                         onBack={() => setStep(3)}
                     />
                 </Box>
@@ -404,7 +405,7 @@ const CampaignSetup: React.FC<Props> = ({ setView, theme }) => {
                             }
                         }} />
                     ) : (
-                        <ScheduledTimeInput 
+                        <ScheduledTimeInput
                             theme={theme}
                             onSelect={(val) => {
                                 setScheduledTime(val);
@@ -423,20 +424,19 @@ const CampaignSetup: React.FC<Props> = ({ setView, theme }) => {
                     </Box>
                     <Text>Name: <Text color={theme.primary}>{campaignName}</Text></Text>
                     <Text>Subject: <Text color={theme.primary}>{emailSubject}</Text></Text>
-                    <Text>Template: <Text color="gray">{path.basename(selectedTemplate)}</Text></Text>
+                    <Text>Template: <Text color="gray">{path.basename(path.dirname(selectedTemplate))}</Text></Text>
                     <Text>List: <Text color="gray">{path.basename(selectedList)}</Text></Text>
                     <Text>Provider: <Text color={theme.primary}>{provider.toUpperCase()}</Text></Text>
                     <Text>Account: <Text color={theme.primary}>{
                         provider === 'smtp' ? smtpProviderName :
-                        provider === 'sendgrid' ? sendGridProviderName :
-                        provider === 'ses' ? sesProviderName :
-                        provider === 'mailgun' ? mailgunProviderName :
-                        mailchimpProviderName
+                            provider === 'sendgrid' ? sendGridProviderName :
+                                provider === 'ses' ? sesProviderName :
+                                    provider === 'mailgun' ? mailgunProviderName :
+                                        mailchimpProviderName
                     }</Text></Text>
                     <Text>From: <Text color={theme.primary}>{fromEmail}</Text></Text>
                     <Text>Campaign Speed: <Text color={theme.primary}>{campaignRateLimit} / min</Text></Text>
-                    <Text>Provider Limit: <Text color="gray">{getProviderRateInfo()}</Text></Text>
-                    <Text>Start: <Text color={theme.primary}>{scheduleType === 'now' ? 'Immediately' : `Scheduled (${scheduledTime})`}</Text></Text>
+                    <Text>Start: <Text color={theme.primary}>{scheduleType === 'now' ? 'Immediately' : `Scheduled (${scheduledTime}) - ${getProviderRateInfo()}`}</Text></Text>
                     <Box marginTop={2}>
                         <SelectInput items={[
                             { label: scheduleType === 'now' ? 'Start Campaign' : 'Schedule Campaign', value: 'start' },
@@ -461,7 +461,11 @@ const CampaignSetup: React.FC<Props> = ({ setView, theme }) => {
 
     return (
         <Box flexDirection="column" height="100%">
-            <Header theme={theme} title="Campaign Setup" />
+            <Box flexDirection="column" alignItems="center" marginBottom={1}>
+                <BigText text="CAMPAIGN SETUP" font="tiny" colors={[theme.primary, theme.secondary, theme.accent]} />
+                <Box marginBottom={1} />
+                <Box borderStyle="single" borderColor={theme.primary} width="100%" />
+            </Box>
             <Box flexDirection="row" flexGrow={1}>
                 {renderLeftPane()}
                 {renderRightPane()}
