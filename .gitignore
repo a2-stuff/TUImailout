@@ -13,3 +13,5 @@ build/
 /assets/ahs
 /assets/ahs/*
 /lists/AHS_1_8910.csv
+.agent/skills/
+

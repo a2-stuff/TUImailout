@@ -18,7 +18,7 @@ const LogsManager: React.FC<Props> = ({ setView, theme }) => {
     const [focusedPane, setFocusedPane] = useState<'menu' | 'content'>('menu');
     const [autoRefresh, setAutoRefresh] = useState(true);
     const [scrollOffset, setScrollOffset] = useState(0);
-    const PAGE_SIZE = 8;
+    const PAGE_SIZE = 5;
 
     useEffect(() => {
         loadLogs();
@@ -185,11 +185,11 @@ const LogsManager: React.FC<Props> = ({ setView, theme }) => {
                                 </Box>
                                 {detailLines.length > 0 && (
                                     <Box flexDirection="column" marginLeft={2}>
-                                        {detailLines.slice(0, 3).map((line, i) => (
+                                        {detailLines.slice(0, 2).map((line, i) => (
                                             <Text key={i} color="gray" dimColor>{line}</Text>
                                         ))}
-                                        {detailLines.length > 3 && (
-                                            <Text color="gray" dimColor>  ... {detailLines.length - 3} more fields</Text>
+                                        {detailLines.length > 2 && (
+                                            <Text color="gray" dimColor>  ... {detailLines.length - 2} more fields</Text>
                                         )}
                                     </Box>
                                 )}
@@ -218,7 +218,7 @@ const LogsManager: React.FC<Props> = ({ setView, theme }) => {
 
             <Box flexDirection="row" flexGrow={1}>
                 {/* Left Pane: Categories */}
-                <Box width="30%" flexDirection="column" padding={1} borderRightColor={theme.secondary} borderStyle="single">
+                <Box width="30%" height="100%" flexDirection="column" padding={1} borderRightColor={theme.secondary} borderStyle="single">
                     <Text color={theme.accent} bold>Log Categories</Text>
 
                     <Box marginTop={1} marginBottom={1} flexDirection="column">
@@ -272,7 +272,7 @@ const LogsManager: React.FC<Props> = ({ setView, theme }) => {
                 </Box>
 
                 {/* Right Pane: Log Details */}
-                <Box width="70%" padding={2} flexDirection="column" borderStyle="single" borderColor={theme.secondary}>
+                <Box width="70%" height="100%" padding={1} flexDirection="column" borderStyle="single" borderColor={theme.secondary}>
                     {renderContent()}
                 </Box>
             </Box>

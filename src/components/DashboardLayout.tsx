@@ -162,10 +162,13 @@ const DashboardLayout: React.FC<Props> = ({ children, theme, viewName }) => {
                     <Text color={theme.secondary}>
                         Providers: {resourceStats.providers}
                     </Text>
+                    <Text color={theme.secondary} dimColor> | </Text>
+                    <Text color={theme.secondary}>Worker: </Text>
+                    <Text color={campaignStats.running > 0 ? theme.success : theme.error}>
+                        {campaignStats.running > 0 ? 'Running' : 'Paused'}
+                    </Text>
                 </Box>
-                <Text color={theme.secondary} dimColor>
-                    Directory: {process.cwd().replace(os.homedir(), '~')}
-                </Text>
+
             </Box>
         </Box>
     );

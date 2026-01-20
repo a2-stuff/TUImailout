@@ -27,7 +27,9 @@ const ListsMenu: React.FC<Props> = ({ setView, theme }) => {
     const [editMode, setEditMode] = useState(false);
     const [lines, setLines] = useState<string[]>([]);
     const [currentLineIndex, setCurrentLineIndex] = useState(0);
+    const [scrollOffset, setScrollOffset] = useState(0);
     const [editingLine, setEditingLine] = useState('');
+    const VISIBLE_ROWS = 13;
     const [isEditingContent, setIsEditingContent] = useState(false);
     const [showActionMenu, setShowActionMenu] = useState(false);
 
@@ -139,16 +141,45 @@ const ListsMenu: React.FC<Props> = ({ setView, theme }) => {
                     setEditMode(false);
                     setFocusedPane('content');
                 } else if (key.upArrow && currentLineIndex > 0) {
-                    setCurrentLineIndex(currentLineIndex - 1);
-                    setEditingLine(lines[currentLineIndex - 1]);
+                    const newIndex = currentLineIndex - 1;
+                    setCurrentLineIndex(newIndex);
+                    setEditingLine(lines[newIndex]);
+                    if (newIndex < scrollOffset) {
+                        setScrollOffset(newIndex);
+                    }
                 } else if (key.downArrow && currentLineIndex < lines.length - 1) {
-                    setCurrentLineIndex(currentLineIndex + 1);
-                    setEditingLine(lines[currentLineIndex + 1]);
+                    const newIndex = currentLineIndex + 1;
+                    setCurrentLineIndex(newIndex);
+                    setEditingLine(lines[newIndex]);
+                    if (newIndex >= scrollOffset + VISIBLE_ROWS) {
+                        setScrollOffset(newIndex - VISIBLE_ROWS + 1);
+                    }
+                } else if (key.delete || key.backspace) {
+                    // Quick delete line
+                    const newLines = [...lines];
+                    newLines.splice(currentLineIndex, 1);
+                    setLines(newLines);
+                    // Adjust index if needed
+                    if (currentLineIndex >= newLines.length && newLines.length > 0) {
+                        setCurrentLineIndex(newLines.length - 1);
+                        setEditingLine(newLines[newLines.length - 1]);
+                    } else if (newLines.length > 0) {
+                        setEditingLine(newLines[currentLineIndex]);
+                    } else {
+                        setEditingLine('');
+                    }
                 } else if (key.return) {
                     setIsEditingContent(true);
                 } else if (key.tab) {
                     setShowActionMenu(true);
                 }
+            }
+        } else if (editMode && isEditingContent) {
+            // Handle actions while typing in input
+            if (key.escape) {
+                // Cancel line edit
+                setIsEditingContent(false);
+                setEditingLine(lines[currentLineIndex]);
             }
         } else if (!editMode) {
             if (key.escape || input === 'q' || input === 'Q') {
@@ -224,10 +255,11 @@ const ListsMenu: React.FC<Props> = ({ setView, theme }) => {
                 </Box>
 
                 <Box flexDirection="column" borderStyle="single" borderColor={theme.secondary} padding={1} height={15}>
-                    {lines.map((line, i) => {
-                        const isActive = i === currentLineIndex;
+                    {lines.slice(scrollOffset, scrollOffset + VISIBLE_ROWS).map((line, i) => {
+                        const actualIndex = scrollOffset + i;
+                        const isActive = actualIndex === currentLineIndex;
                         return (
-                            <Box key={i}>
+                            <Box key={actualIndex}>
                                 <Text color={isActive ? theme.accent : 'gray'}>
                                     {isActive ? '> ' : '  '}
                                 </Text>
@@ -239,7 +271,7 @@ const ListsMenu: React.FC<Props> = ({ setView, theme }) => {
                                         focus={true}
                                     />
                                 ) : (
-                                    <Text color={isActive ? theme.primary : theme.text}>
+                                    <Text color={isActive ? theme.primary : theme.text} wrap="truncate-end">
                                         {line || '(empty line)'}
                                     </Text>
                                 )}
@@ -250,8 +282,8 @@ const ListsMenu: React.FC<Props> = ({ setView, theme }) => {
 
                 <Box marginTop={2} flexDirection="column">
                     <Text color={theme.accent} bold>Controls:</Text>
-                    <Text>↑/↓ - Navigate lines | Enter - Edit current line</Text>
-                    <Text>TAB - Save list | ESC - Cancel</Text>
+                    <Text>↑/↓ - Navigate | Enter - Edit | Backspace - Delete Line</Text>
+                    <Text>TAB - Save File | ESC - Cancel / Exit Edit Mode</Text>
                 </Box>
 
                 <Box marginTop={1} padding={1} borderStyle="single" borderColor={theme.accent}>
@@ -260,7 +292,7 @@ const ListsMenu: React.FC<Props> = ({ setView, theme }) => {
                             { label: '💾 SAVE LIST CHANGES', value: 'save' },
                             { label: '❌ CANCEL', value: 'cancel' }
                         ]}
-                        isFocused={focusedPane === 'content'}
+                        isFocused={showActionMenu}
                         onSelect={(item) => {
                             if (item.value === 'save') {
                                 saveFile();
@@ -530,7 +562,7 @@ const ListsMenu: React.FC<Props> = ({ setView, theme }) => {
 
             <Box flexDirection="row" flexGrow={1}>
                 {/* Left Pane: List of CSV files */}
-                <Box width="30%" flexDirection="column" padding={1} borderRightColor={theme.secondary} borderStyle="single">
+                <Box width="30%" height="100%" flexDirection="column" padding={1} borderRightColor={theme.secondary} borderStyle="single">
                     <Header theme={theme} title="CSV Lists" compact={true} />
                     <Box marginTop={1} flexDirection="column">
                         <SelectInput
@@ -605,7 +637,7 @@ const ListsMenu: React.FC<Props> = ({ setView, theme }) => {
                 </Box>
 
                 {/* Right Pane: File details and actions */}
-                <Box width="70%" padding={2} flexDirection="column" borderStyle="single" borderColor={theme.secondary}>
+                <Box width="70%" height="100%" padding={2} flexDirection="column" borderStyle="single" borderColor={theme.secondary}>
                     {mainRenderContent()}
                 </Box>
             </Box>

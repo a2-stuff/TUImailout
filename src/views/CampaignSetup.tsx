@@ -104,7 +104,7 @@ const CampaignSetup: React.FC<Props> = ({ setView, theme }) => {
     ];
 
     const renderLeftPane = () => (
-        <Box flexDirection="column" padding={1} width="30%" borderRightColor={theme.secondary} borderStyle="single">
+        <Box flexDirection="column" padding={1} width="30%" height="100%" borderRightColor={theme.secondary} borderStyle="single">
             <Header theme={theme} title="Setup" compact={true} />
             <Box marginTop={1} flexDirection="column">
                 {stepLabels.map((label, index) => {
@@ -290,7 +290,7 @@ const CampaignSetup: React.FC<Props> = ({ setView, theme }) => {
         ];
 
         return (
-            <Box width="70%" padding={2} flexDirection="column" borderStyle="single" borderColor={theme.secondary}>
+            <Box width="70%" height="100%" padding={2} flexDirection="column" borderStyle="single" borderColor={theme.secondary}>
                 {content[step]}
             </Box>
         );

@@ -6,8 +6,12 @@ All notable changes to this project will be documented in this file.
 ### Added
 - **Dashboard Interface:** Complete UI overhaul with a professional TUI layout.
   - **Top Status Bar:** Displays real-time System Stats (App Memory Usage in MB, App CPU Usage %, Active User) and version.
-  - **Bottom Status Bar:** Displays context-aware keybindings, Campaign Stats (Running/Total), Resource Counts (Lists, Templates, Providers), and Current Working Directory.
+  - **Bottom Status Bar:** Displays context-aware keybindings, Campaign Stats, Resource Counts, and real-time **Worker Status** (Running/Paused).
   - **Unified Theme:** Applied a consistent "Dashboard Protocol" theme (Tokyo Night style) across all views.
+  - **Optimized List Editor:** Implemented virtualization to handle large CSV files (8000+ records) with zero lag.
+   - **Quick Actions:** Added `Backspace`/`Delete` shortcut in List Editor to delete lines instantly.
+   - **Editor UX:** Added `ESC` support to cancel line editing and revert changes, preventing stuck states.
+   - **Focus Management:** Fixed UI conflict where navigation arrows would incorrectly trigger the "Save/Cancel" menu. The menu is now separate and accessible via `TAB`.
 - **Real-time Monitoring:** Added live monitoring for CPU and RAM usage specific to the application process.
 
 ### Improved
@@ -17,6 +21,8 @@ All notable changes to this project will be documented in this file.
 - **Log Viewer:** Optimized the Logs Manager for better stability.
   - Fixed UI flickering by reducing unnecessary re-renders.
   - Locked layout width to prevent horizontal jittering.
+  - Locked layout height to prevent vertical jittering.
+  - Enforced consistent full-height layout across Home, Campaign Setup, Monitor, and **Lists Manager** views.
   - Reduced page size to ensure the interface fits comfortably on standard terminal screens.
 
 ## [1.3.6] - 2026-01-19

@@ -55,7 +55,7 @@ const Home: React.FC<Props> = ({ setView, theme }) => {
     });
 
     return (
-        <Box flexDirection="column" padding={2}>
+        <Box flexDirection="column" padding={2} height="100%">
             <Header theme={theme} />
             <Box flexDirection="column" alignItems="center" marginTop={1}>
                 <Text color={theme.accent} bold>Main Menu:</Text>

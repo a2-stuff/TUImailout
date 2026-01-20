@@ -133,7 +133,7 @@ const CampaignMonitor: React.FC<Props> = ({ setView, theme }) => {
 
             <Box flexDirection="row" flexGrow={1}>
                 {/* Left Pane: Campaign List */}
-                <Box width="30%" flexDirection="column" padding={1} borderRightColor={theme.secondary} borderStyle="single">
+                <Box width="30%" height="100%" flexDirection="column" padding={1} borderRightColor={theme.secondary} borderStyle="single">
                     <Text color={theme.accent} bold>Campaigns</Text>
                     <Box marginTop={1}>
                         <SelectInput
@@ -165,7 +165,7 @@ const CampaignMonitor: React.FC<Props> = ({ setView, theme }) => {
                 </Box>
 
                 {/* Right Pane: Details */}
-                <Box width="70%" padding={2} flexDirection="column" borderStyle="single" borderColor={theme.secondary}>
+                <Box width="70%" height="100%" padding={2} flexDirection="column" borderStyle="single" borderColor={theme.secondary}>
                     {selectedCampaign ? (
                         <Box flexDirection="column">
                             <Box marginBottom={1}>
